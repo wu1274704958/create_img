@@ -2,12 +2,19 @@
 #include <png.h>
 #include <gray.hpp>
 #include <matrix2.hpp>
+#include <serialization.hpp>
 
 using namespace std;
 
 int main(int argc,char **argv)
 {
 	//system("pause");
+
+	float r_ratio = 1.0;
+
+	if (argc >= 4)
+		r_ratio = wws::parser<float>(argv[3]);
+
 	if (argc >= 3)
 	{
 		png_image image;
@@ -28,7 +35,7 @@ int main(int argc,char **argv)
 
 			float w_2 = static_cast<float>( image.width / 2 );
 			float h_2 = static_cast<float>( image.height /2 );
-			float r = w_2 * 0.7;
+			float r = w_2 * r_ratio;
 
 			cout <<  "byte_size : " << byte_size << endl;
 			cout << "size : " << size << endl;
@@ -52,7 +59,7 @@ int main(int argc,char **argv)
 						{
 							int curr = y * image.width + x;
 							int* c = reinterpret_cast<int*>(&buffer[curr * 4]);
-							*c = 0x00000000;
+							*c = 0x00ffffff;
 						}
 					}
 				}
