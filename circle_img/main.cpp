@@ -55,11 +55,21 @@ int main(int argc,char **argv)
 					for (int x = 0; x < image.width; ++x)
 					{
 						cgm::vec2 l = cgm::vec2({ static_cast<float>(x),static_cast<float>(y) }) - cgm::vec2( { w_2,h_2 } );
-						if (l.len() >= r)
+						float off = 0.0f;
+						if ((off = (l.len() - r)) >= 0.f)
 						{
 							int curr = y * image.width + x;
 							int* c = reinterpret_cast<int*>(&buffer[curr * 4]);
-							*c = 0x00ffffff;
+							
+							if (off > 14.0f)
+							{
+								*c = 0x22ffffff;
+							}
+							else {
+								unsigned int alpha = 34 + static_cast<unsigned int>( (1.0f - ( off / 14.0f)) * 221);
+								*c &= 0x00ffffff;
+								*c |= (alpha << 24);
+							}
 						}
 					}
 				}
@@ -85,9 +95,9 @@ int main(int argc,char **argv)
 					free(buffer);
 			}
 		}
-		cerr << "begin read failed " << image.message << endl;
+		std::cerr << "begin read failed " << image.message << endl;
 		return 0;
 	}
-	cerr << "Not input file!" << endl;
+	std::cerr << "Not input file!" << endl;
 	return -1;
 }
