@@ -61,12 +61,12 @@ int main(int argc,char **argv)
 							int curr = y * image.width + x;
 							int* c = reinterpret_cast<int*>(&buffer[curr * 4]);
 							
-							if (off > 14.0f)
+							if (off > 5.0f)
 							{
-								*c = 0x22ffffff;
+								*c = 0x00ffffff;
 							}
 							else {
-								unsigned int alpha = 34 + static_cast<unsigned int>( (1.0f - ( off / 14.0f)) * 221);
+								unsigned int alpha = static_cast<unsigned int>( (1.0f - ( off / 5.0f)) * 255);
 								*c &= 0x00ffffff;
 								*c |= (alpha << 24);
 							}
