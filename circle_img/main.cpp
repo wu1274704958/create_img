@@ -81,6 +81,8 @@ int main(int argc,char **argv)
 					/* The image has been written successfully. */
 					exit(0);
 				}
+				if (buffer)
+					free(buffer);
 			}
 			else
 			{
