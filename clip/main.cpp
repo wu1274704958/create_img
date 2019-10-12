@@ -1,7 +1,11 @@
 #include <iostream>
 #include <png.h>
+#include <tuple>
+#include <memory>
 
 using namespace std;
+
+tuple<bool, unique_ptr<char>, size_t> load_png();
 
 int main(int argc, char** argv)
 {
