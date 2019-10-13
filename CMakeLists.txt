@@ -18,6 +18,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 find_package(libpng)
 find_package(MINI_TEST)
 
+include_directories( ${CMAKE_SOURCE_DIR})
+
 if(LIB_PNG_FOUND AND MINI_TEST_FOUND)
 
 add_executable(circle_img circle_img/main.cpp)
