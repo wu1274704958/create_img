@@ -28,7 +28,7 @@ int main(int argc,char **argv)
 
 			image.format = PNG_FORMAT_RGBA;
 
-			size_t byte_size = PNG_IMAGE_SIZE(image);
+			size_t byte_size = static_cast<std::size_t>(PNG_IMAGE_SIZE(image));
 			size_t size = byte_size / 4;
 
 			buffer = (unsigned char*)malloc(byte_size);
