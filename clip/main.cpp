@@ -3,15 +3,35 @@
 #include <tuple>
 #include <memory>
 #include <include/sundry.hpp>
+#include <functional>
+#include <comm.hpp>
+#include <serialization.hpp>
 
 using namespace std;
 namespace ps = ::png_sundry;
 using namespace ps;
 
+typedef std::function<void(png_imagep, png_imagep, unique_ptr<png_byte[]>&, unique_ptr<png_byte[]>&)> HandlerFT;
+
+void f1(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr);
+
 int main(int argc, char** argv)
 {
-	if (argc >= 4)
+
+	HandlerFT handlers[] = { f1 };
+
+	if (argc >= 5)
 	{
+		int fi = 0;
+		try {
+			fi = wws::parser<int>(argv[4]);
+		}
+		catch (...)
+		{
+			cerr << "parser failed!" << endl;
+			return -1;
+		}
+
 		png_image cxt, clip;
 
 		init_image(&cxt);
@@ -30,19 +50,12 @@ int main(int argc, char** argv)
 				std::cerr << "Size not same!" << endl;
 				return -1;
 			}
-
-			for(int y = 0;y < cxt.height;++y)
+			if (fi < wws::arrLen(handlers) && fi >= 0)
 			{
-				for (int x = 0; x < cxt.width; ++x)
-				{
-					int curr = y * cxt.width + x;
-					int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
-					if (*cc == 0xffffffff)
-					{
-						int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
-						*cxt_c = 0x00ffffff;
-					}
-				}
+				handlers[fi](&cxt, &clip, cxt_ptr, clip_ptr);
+			}else{
+				cerr << "not find this handler!" << endl;
+				return -1;
 			}
 
 			png_image_write_to_file(&cxt, argv[3], 0/*convert_to_8bit*/,
@@ -60,4 +73,21 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
+}
+
+void f1(png_imagep cxt,png_imagep clip,unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr)
+{
+	for (int y = 0; y < cxt->height; ++y)
+	{
+		for (int x = 0; x < cxt->width; ++x)
+		{
+			int curr = y * cxt->width + x;
+			int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
+			if (*cc == 0xffffffff)
+			{
+				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
+				*cxt_c = 0x00ffffff;
+			}
+		}
+	}
 }
