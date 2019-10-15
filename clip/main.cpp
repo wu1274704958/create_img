@@ -6,6 +6,7 @@
 #include <functional>
 #include <comm.hpp>
 #include <serialization.hpp>
+#include <matrix2.hpp>
 
 using namespace std;
 namespace ps = ::png_sundry;
@@ -14,11 +15,10 @@ using namespace ps;
 typedef std::function<void(png_imagep, png_imagep, unique_ptr<png_byte[]>&, unique_ptr<png_byte[]>&)> HandlerFT;
 
 void f1(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr);
-
+void f2(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr);
 int main(int argc, char** argv)
 {
-
-	HandlerFT handlers[] = { f1 };
+	HandlerFT handlers[] = { f1,f2 };
 
 	if (argc >= 5)
 	{
@@ -87,6 +87,50 @@ void f1(png_imagep cxt,png_imagep clip,unique_ptr<png_byte[]>& cxt_ptr, unique_p
 			{
 				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
 				*cxt_c = 0x00ffffff;
+			}
+		}
+	}
+}
+
+#define F2_MAX_CAN_YING 32
+#define F2_LIGHT_POS {1.0f,0.0f}
+
+void f2(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr)
+{
+	using namespace cgm;
+	vec2 light_pos(F2_LIGHT_POS);
+	light_pos.x() *= static_cast<float>(cxt->width);
+	light_pos.y() *= static_cast<float>(cxt->height);
+
+	for (int y = 0; y < cxt->height; ++y)
+	{
+		for (int x = 0; x < cxt->width; ++x)
+		{
+			int curr = y * cxt->width + x;
+			int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
+			if (*cc == 0xffffffff)
+			{
+				vec2 lv = vec2({static_cast<float>(x),static_cast<float>(y)}) - light_pos;
+				vec2 lv_unit = lv.unitized();
+				int color = 0x00ffffff;
+				for (int i = 1; i < F2_MAX_CAN_YING; ++i)
+				{
+					vec2 last = lv - (lv_unit * static_cast<float>(i)) + light_pos;
+					if (last.x() >= 0 && last.y() >= 0)
+					{
+						int last_curr = static_cast<int>(last.y())* cxt->width + static_cast<int>(last.x());
+						int* last_cc = reinterpret_cast<int*>(&clip_ptr[last_curr * 4]);
+						if (*last_cc != 0xffffffff)
+						{
+							int* last_cxt_c = reinterpret_cast<int*>(&cxt_ptr[last_curr * 4]);
+							color = /**last_cxt_c*/ 0x0 & color;
+							color |= (static_cast<int>((1.0 - static_cast<float>(i) / static_cast<float>(F2_MAX_CAN_YING)) * 255.f) << 24);
+							break;
+						}
+					}
+				}
+				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
+				*cxt_c = color;
 			}
 		}
 	}
