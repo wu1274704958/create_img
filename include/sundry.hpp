@@ -43,15 +43,15 @@ namespace png_sundry {
 	}
 
 	class hex {
-		int v;
+		unsigned int v;
 	public:
 		hex() : v(0) {}
-		hex(int x) : v(x) {}
-		int operator=(int x) {
+		hex(unsigned int x) : v(x) {}
+		int operator=(unsigned int x) {
 			v = x;
 			return v;
 		}
-		operator int()
+		operator unsigned int()
 		{
 			return v;
 		}
@@ -61,7 +61,7 @@ namespace png_sundry {
 	{
 		if constexpr (std::is_same_v<T, hex>)
 		{
-			return wws::parser<int>(str, 16);
+			return wws::parser<unsigned int>(str, 16);
 		}
 		else {
 			return wws::parser<T>(str);
@@ -135,6 +135,9 @@ namespace png_sundry {
 		{}
 		
 		FuncWithArgs(Fir_Args_Ty args_, Func_Ty f_):args(args_),f(f_)
+		{}
+
+		FuncWithArgs( Func_Ty f_) : f(f_)
 		{}
 		
 		Ret operator()(Oth ...oth)
