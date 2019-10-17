@@ -12,13 +12,16 @@ using namespace std;
 namespace ps = ::png_sundry;
 using namespace ps;
 
-typedef std::function<void(png_imagep, png_imagep, unique_ptr<png_byte[]>&, unique_ptr<png_byte[]>&)> HandlerFT;
+#define CONST_ARGS png_imagep, png_imagep, unique_ptr<png_byte[]>&, unique_ptr<png_byte[]>&
 
-void f1(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr);
-void f2(png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr);
-int main(int argc, char** argv)
+auto handlers = make_tuple(
+	FuncWithArgs<void,std::tuple<>,CONST_ARGS>(),
+	FuncWithArgs<void,std::tuple<>, CONST_ARGS>()
+);
+
+
+int main(int argc, const char** argv)
 {
-	HandlerFT handlers[] = { f1,f2 };
 
 	if (argc >= 5)
 	{
@@ -50,9 +53,16 @@ int main(int argc, char** argv)
 				std::cerr << "Size not same!" << endl;
 				return -1;
 			}
-			if (fi < wws::arrLen(handlers) && fi >= 0)
+			if (fi < tuple_size_v<decltype(handlers)> && fi >= 0)
 			{
-				handlers[fi](&cxt, &clip, cxt_ptr, clip_ptr);
+				try {
+					fwa_tup_run(handlers, fi, argv, 5, &cxt,&clip, cxt_ptr, clip_ptr);
+				}
+				catch (std::exception e)
+				{
+					cerr << "error: "<< e.what() << endl;
+					return -1;
+				}
 			}else{
 				cerr << "not find this handler!" << endl;
 				return -1;

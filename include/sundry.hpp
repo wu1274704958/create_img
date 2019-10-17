@@ -4,6 +4,8 @@
 #include <tuple>
 #include <optional>
 #include <png.h>
+#include <serialization.hpp>
+#include <functional>
 
 #define PNG_FAILED_CODE 0
 namespace png_sundry {
@@ -40,4 +42,131 @@ namespace png_sundry {
 		pimg->version = ver;
 	}
 
+	class hex {
+		int v;
+	public:
+		hex() : v(0) {}
+		hex(int x) : v(x) {}
+		int operator=(int x) {
+			v = x;
+			return v;
+		}
+		operator int()
+		{
+			return v;
+		}
+	};
+	template<typename T, typename = std::enable_if_t< std::is_integral_v<T> || std::is_floating_point_v<T> || std::is_same_v<T,hex>>>
+	T parser(const std::string& str, size_t _Base = 10)
+	{
+		if constexpr (std::is_same_v<T, hex>)
+		{
+			return wws::parser<int>(str, 16);
+		}
+		else {
+			return wws::parser<T>(str);
+		}
+	}
+
+	template<typename ...Ty>
+	class FuncArgs {
+		std::tuple<Ty...> tup;
+	public:
+		FuncArgs() : tup()
+		{}
+		void fill_args(const char** p,int begin_i = 0)
+		{
+			if (p)
+				fill_args_impl<0>(p,begin_i);
+		}
+		template<typename Ret,typename ...Oth>
+		Ret run(std::function<Ret(std::tuple<Ty...>&, Oth...)> f,Oth&& ...oth)
+		{
+			return f(tup, std::forward<Oth>(oth) ...);
+		}
+	private:
+		template<std::size_t I>
+		void fill_args_impl(const char** p,int i)
+		{
+			if constexpr (I < std::tuple_size_v<std::tuple<Ty...>>)
+			{
+				std::get<I>(tup) = parser< std::remove_reference_t<decltype(std::get<I>(tup))>>(p[i]);
+				if constexpr (I < (std::tuple_size_v<std::tuple<Ty...>> -1))
+				{
+					fill_args_impl<I + 1>(p,i + 1);
+				}
+			}
+		}
+	};
+
+	template<typename T>
+	struct tuple_to_FuncArgs;
+
+	template<typename ...Args>
+	struct tuple_to_FuncArgs<std::tuple<Args...>>
+	{
+		using type = FuncArgs<Args...>;
+	};
+
+	template<typename T>
+	struct is_tuple {
+		static constexpr bool val = false;
+	};
+
+	template<typename ...Args>
+	struct is_tuple<std::tuple<Args ...>>
+	{
+		static constexpr bool val = true;
+	};
+
+	template <typename Ret,typename Tup,typename ...Oth>
+	class FuncWithArgs
+	{
+		static_assert(is_tuple<Tup>::val,"Must be std::tuple!");
+	public:
+		using Fir_ty = Tup;	
+		using Fir_Args_Ty = typename tuple_to_FuncArgs<Tup>::type;
+		using Func_Ty = std::function<Ret(Tup&, Oth...)>;
+
+		Fir_Args_Ty args;
+		Func_Ty f;
+
+		FuncWithArgs()
+		{}
+		
+		FuncWithArgs(Fir_Args_Ty args_, Func_Ty f_):args(args_),f(f_)
+		{}
+		
+		Ret operator()(Oth ...oth)
+		{
+			return args.template run<Ret,Oth ...>(f, std::forward<Oth>(oth) ...);
+		}
+	};
+
+	template<typename Tup, std::size_t I, typename ...Oth>
+	void fwa_tup_run_sub(Tup& tup, int i, const char** data, int begin_idx, Oth&& ...oth)
+	{
+		static_assert(is_tuple<Tup>::val, "Must be std::tuple!");
+		
+		if (i == I)
+		{
+			std::get<I>(tup).args.fill_args(data, begin_idx);
+			std::get<I>(tup).operator()(std::forward<Oth>(oth)...);
+			return;
+		}
+		if constexpr(I + 1 < std::tuple_size_v<Tup>)
+		{
+			fwa_tup_run_sub<Tup, I + 1, Oth...>(tup, i, data, begin_idx, std::forward<Oth>(oth) ...);
+		}
+	}
+
+	template<typename Tup, typename ...Oth>
+	void fwa_tup_run(Tup& tup, int i, const char** data, int begin_idx, Oth&& ...oth)
+	{
+		static_assert(is_tuple<Tup>::val, "Must be std::tuple!");
+		if constexpr((std::tuple_size_v<Tup>) > 0)
+		{
+			fwa_tup_run_sub<Tup, 0, Oth...>(tup, i, data, begin_idx, std::forward<Oth>(oth) ...);
+		}
+	}
 }
