@@ -14,16 +14,16 @@ using namespace ps;
 
 #define CONST_ARGS png_imagep, png_imagep, unique_ptr<png_byte[]>&, unique_ptr<png_byte[]>&
 
-void f1(std::tuple<ps::hex>&, CONST_ARGS);
+void f1(std::tuple<dyn_op,ps::hex>&, CONST_ARGS);
 void f2(std::tuple<>&, CONST_ARGS);
 
 auto handlers = make_tuple(
-	FuncWithArgs<void,std::tuple<ps::hex>,CONST_ARGS>(f1),
+	FuncWithArgs<void,std::tuple<dyn_op,ps::hex>,CONST_ARGS>(f1),
 	FuncWithArgs<void,std::tuple<>, CONST_ARGS>(f2)
 );
 
 
-int main(int argc, const char** argv)
+int main(int argc, char** argv)
 {
 	if (argc >= 5)
 	{
@@ -87,16 +87,16 @@ int main(int argc, const char** argv)
 	return 0;
 }
 
-void f1(std::tuple<ps::hex>& args,png_imagep cxt,png_imagep clip,unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr)
+void f1(std::tuple<dyn_op,ps::hex>& args,png_imagep cxt,png_imagep clip,unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr)
 {
-	auto [color] = args;
+	auto [op,color] = args;
 	for (int y = 0; y < cxt->height; ++y)
 	{
 		for (int x = 0; x < cxt->width; ++x)
 		{
 			int curr = y * cxt->width + x;
 			int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
-			if (*cc >= color)
+			if (op.cmp( *cc , color))
 			{
 				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
 				*cxt_c = 0x00ffffff;
