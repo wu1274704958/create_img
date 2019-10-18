@@ -72,6 +72,7 @@ namespace png_sundry {
 	class FuncArgs {
 		std::tuple<Ty...> tup;
 	public:
+		constexpr static size_t ArgsCount = sizeof...(Ty);
 		FuncArgs() : tup()
 		{}
 		void fill_args(const char** p,int begin_i = 0)
@@ -146,30 +147,40 @@ namespace png_sundry {
 		}
 	};
 
+	struct ArgsNotEqual : public std::exception
+	{
+		ArgsNotEqual() : std::exception("Args Not Equal!!!") { }
+	};
+
 	template<typename Tup, std::size_t I, typename ...Oth>
-	void fwa_tup_run_sub(Tup& tup, int i, const char** data, int begin_idx, Oth&& ...oth)
+	void fwa_tup_run_sub(Tup& tup, int i, const char** data, int begin_idx, int args_count, Oth&& ...oth)
 	{
 		static_assert(is_tuple<Tup>::val, "Must be std::tuple!");
 		
 		if (i == I)
 		{
-			std::get<I>(tup).args.fill_args(data, begin_idx);
-			std::get<I>(tup).operator()(std::forward<Oth>(oth)...);
+			if (std::get<I>(tup).args.ArgsCount == args_count)
+			{
+				std::get<I>(tup).args.fill_args(data, begin_idx);
+				std::get<I>(tup).operator()(std::forward<Oth>(oth)...);
+			}
+			else
+				throw ArgsNotEqual();
 			return;
 		}
 		if constexpr(I + 1 < std::tuple_size_v<Tup>)
 		{
-			fwa_tup_run_sub<Tup, I + 1, Oth...>(tup, i, data, begin_idx, std::forward<Oth>(oth) ...);
+			fwa_tup_run_sub<Tup, I + 1, Oth...>(tup, i, data, begin_idx,args_count, std::forward<Oth>(oth) ...);
 		}
 	}
 
 	template<typename Tup, typename ...Oth>
-	void fwa_tup_run(Tup& tup, int i, const char** data, int begin_idx, Oth&& ...oth)
+	void fwa_tup_run(Tup& tup, int i, const char** data, int begin_idx,int args_count,Oth&& ...oth)
 	{
 		static_assert(is_tuple<Tup>::val, "Must be std::tuple!");
 		if constexpr((std::tuple_size_v<Tup>) > 0)
 		{
-			fwa_tup_run_sub<Tup, 0, Oth...>(tup, i, data, begin_idx, std::forward<Oth>(oth) ...);
+			fwa_tup_run_sub<Tup, 0, Oth...>(tup, i, data, begin_idx,args_count, std::forward<Oth>(oth) ...);
 		}
 	}
 }

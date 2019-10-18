@@ -25,7 +25,6 @@ auto handlers = make_tuple(
 
 int main(int argc, const char** argv)
 {
-	
 	if (argc >= 5)
 	{
 		int fi = 0;
@@ -59,7 +58,7 @@ int main(int argc, const char** argv)
 			if (fi < tuple_size_v<decltype(handlers)> && fi >= 0)
 			{
 				try {
-					fwa_tup_run(handlers, fi, argv, 5, &cxt,&clip, cxt_ptr, clip_ptr);
+					fwa_tup_run(handlers, fi, argv, 5,argc - 5, &cxt,&clip, cxt_ptr, clip_ptr);
 				}
 				catch (std::exception e)
 				{
