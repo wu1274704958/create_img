@@ -3,7 +3,9 @@
 #include <iostream>
 #include <thread>
 #include <dbg.hpp>
+#include <surface.hpp>
 
+using namespace wws;
 
 int main(int argc,char **argv) {
 	const char* font_path = "C:\\Windows\\Fonts\\Raleway-Regular.ttf";
@@ -20,10 +22,19 @@ int main(int argc,char **argv) {
 	int v = 0;
 	if ((v = FT_New_Face(ft_lib, font_path, 0, &face)) != 0)
 	{
-		
+		FT_Done_FreeType(ft_lib);
 		return -1;
 	}
+
+	FT_Select_Charmap(face, FT_ENCODING_GB2312);
 	
+	surface<cmd_content> sur(20,20);
+
+	sur.set_pixel(0, 0, '*');
+	sur.set_pixel(19, 19, '*');
+	sur.set_pixel(0, 19, '*');
+
+	sur.present(std::cout);
 
 	dbg(face->num_charmaps);
 	dbg(face->num_faces);

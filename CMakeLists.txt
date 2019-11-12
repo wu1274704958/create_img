@@ -19,7 +19,7 @@ find_package(libpng)
 find_package(MINI_TEST)
 find_package(freetype)
 
-include_directories( ${CMAKE_SOURCE_DIR})
+include_directories( "${CMAKE_SOURCE_DIR}/include")
 
 if(LIB_PNG_FOUND AND MINI_TEST_FOUND)
 
