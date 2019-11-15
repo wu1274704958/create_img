@@ -1,6 +1,4 @@
-#include <ft2build.h>
-#include <freetype/freetype.h>
-#include <freetype/ftglyph.h>
+#include "ft2pp.hpp"
 #include <iostream>
 #include <thread>
 #include <dbg.hpp>
@@ -19,7 +17,6 @@ int main(int argc,char **argv) {
 		font_path = argv[1];
 	
 	FT_Library ft_lib;
-
 	FT_Init_FreeType(&ft_lib);
 	
 	FT_Face face;
