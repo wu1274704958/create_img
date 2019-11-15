@@ -66,7 +66,7 @@ namespace wws {
 
 		virtual void present(PRESENT_ARGS_TYPE a)
 		{
-			a << ptr;
+			a << ptr << "\n";
 		}
 
 	};
