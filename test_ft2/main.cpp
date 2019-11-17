@@ -6,56 +6,42 @@
 #include <gray.hpp>
 
 using namespace wws;
+using namespace ft2;
 
 template <typename Cnt,typename Pit>
 int render_text(surface<Cnt>& sur, FT_GlyphSlot gs,Pit c,int bx = 0,int by = 0);
 
 int main(int argc,char **argv) {
-	const char* font_path = "C:\\Windows\\Fonts\\SIMYOU.TTF";
+	const char* font_path = "C:\\Windows\\Fonts\\simhei.ttf";
 	
 	if (argc > 1)
 		font_path = argv[1];
 	
-	FT_Library ft_lib;
-	FT_Init_FreeType(&ft_lib);
-	
-	FT_Face face;
+	Library lib;
 
-	int v = 0;
-	if ((v = FT_New_Face(ft_lib, font_path, 0, &face)) != 0)
-	{
-		FT_Done_FreeType(ft_lib);
-		return -1;
-	}
+	Face face = lib.load_face<Face>(font_path);
+
 	int x = 0;
-	//FT_Select_Charmap(face, FT_ENCODING_GB2312);
-	FT_Set_Pixel_Sizes(face, 30, 30);
+	
+	face.set_pixel_size(30, 30);
 	
 	surface<cmd_content> sur(60, 30);
 
 
-	FT_UInt n1 = FT_Get_Char_Index(face,L'1');
+	face.load_glyph(L'1');
 
-	FT_Load_Glyph(face, n1, FT_LOAD_DEFAULT);
+	x += face.render_surface(sur,&CmdSurface::set_pixel, x, 0,'*');
 
-	FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO);
-	
-	
-	x = render_text(sur, face->glyph,'*',x,0);
+	face.load_glyph(L'2');
 
-	n1 = FT_Get_Char_Index(face, L'2');
+	x += face.render_surface(sur, &CmdSurface::set_pixel, x, 0, '*');
 
-	FT_Load_Glyph(face, n1, FT_LOAD_DEFAULT);
+	face.load_glyph(L'3');
 
-	FT_Render_Glyph(face->glyph, FT_RENDER_MODE_MONO);
-
-	render_text(sur, face->glyph, '*', x, 0);
+	x += face.render_surface(sur, &CmdSurface::set_pixel, x, 0, '*');
 
 	sur.present(std::cout);
 
-	FT_Done_Face(face);
-
-	FT_Done_FreeType(ft_lib);
 	system("pause");
 
 	return 0;

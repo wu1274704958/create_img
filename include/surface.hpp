@@ -113,4 +113,6 @@ namespace wws {
 			content.present(a);
 		}
 	};
+
+	typedef surface<cmd_content> CmdSurface;
 }
