@@ -79,6 +79,12 @@ namespace ft2 {
 			auto bits = &gs->bitmap;
 			constexpr int CS = sizeof(char) * 8;
 
+			/*FT_Glyph glyph;
+			FT_Get_Glyph(gs, &glphy);
+
+			FT_BBox box;
+			FT_Glyph_Get_CBox(glyph, FT_GLYPH_BBOX_PIXELS, &box);*/
+
 			int a = gs->bitmap_left + bx;
 			int b = (gs->face->size->metrics.y_ppem) - bits->rows + by;
 
