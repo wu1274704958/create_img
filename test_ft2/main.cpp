@@ -10,6 +10,7 @@
 #include <memory>
 #include <random>
 #include <chrono>
+#include <math.h>
 
 #include <Windows.h>
 #undef max
@@ -118,28 +119,57 @@ int main(int argc,char **argv) {
 		}
 	};
 
-	auto step = [&use, &out]() {
+	auto step_unit = [](std::unique_ptr<point>& p) {
+		if (p->pos.x() != p->tar.x() || p->pos.y() != p->tar.y())
+		{
+			if (std::abs(p->pos.x() - p->tar.x()) < 1.0 || std::abs(p->pos.y() - p->tar.y()) < 1.0)
+			{
+				p->pos = p->tar;
+			}
+			else
+			{
+				p->pos = p->pos + p->v;
+			}
+		}
+		else {
+			p->v.x() = 0.0f;
+			p->v.y() = 0.0f;
+		}
+	};
 
+	auto step = [&use, &out,step_unit]() {
+		for (auto& p : use) {
+			step_unit(p);
+		}
+		for (auto& p : out) {
+			step_unit(p);
+		}
 	};
 
 	auto fill = [&use,&out,&sur]() {
 		sur.clear();
 		for (auto& p : use) {
-			sur.set_pixel(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y()),'*');
+			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),'*');
 		}
 		for (auto& p : out) {
-			sur.set_pixel(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y()),'*');
+			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),'*');
 		}
 	};
 	
+	auto& p = get_out_to_use();
+	p->pos = vec2{ 0.0f,0.0f };//rd_out_pos(0, 0);
+	p->v = vec2{ 1.0f,1.0f }.unitized();
+	p->tar = vec2{ 30.f,30.f };
 
-	while (s >= 0)
+	while (true)
 	{
 		go_to_xy(0, 0);
-		set_text(sur, face, wws::to_string(s));
-		--s;
-		sur.clear();
-		Sleep(1000);
+		set_text(back, face, wws::to_string(s));
+
+		fill();
+		sur.present(std::cout);
+		step();
+		Sleep(30);
 	}
 	
 
