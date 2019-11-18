@@ -50,10 +50,11 @@ int main(int argc,char **argv) {
 
 	int x = 0;
 	srand(time(nullptr));
-	face.set_pixel_size(30, 30);
+	face.set_pixel_size(60, 60);
 
-	surface<cmd_content> sur(60, 30);
-	surface<cmd_content> back(60, 30);
+	surface<cmd_content> sur(60, 60);
+	surface<cmd_content> last(60, 60);
+	surface<cmd_content> back(60, 60);
 
 	int s = 90;
 
@@ -70,7 +71,8 @@ int main(int argc,char **argv) {
 			use.push_back(std::unique_ptr<point>(new point()));
 			return use.back();
 		}
-		use.push_back(std::move(out[0]));
+		use.push_back(std::move(out.back()));
+		out.pop_back();
 		return use.back();
 	};
 
@@ -97,8 +99,8 @@ int main(int argc,char **argv) {
 	};
 
 	auto rd_out_pos = [&sur](int x,int y)->vec2 {
-		constexpr int MaxW = 8;
-		constexpr int M = 5;
+		constexpr int MaxW = 16;
+		constexpr int M = 10;
 		if (x < MaxW || (sur.w() - x) < MaxW )
 		{
 			int res_x = x < MaxW ? -1 : sur.w();
@@ -109,7 +111,7 @@ int main(int argc,char **argv) {
 				return vec2{ static_cast<float>(res_x) ,static_cast<float>(y - off) };
 		}
 		else {
-			int res_y = (rand() % 2) == 0 ? -1 : sur.h();
+			int res_y = y > (sur.h() / 2) ? sur.h() : -1;//(rand() % 2) == 0 ? -1 : sur.h();
 			int off = rand() % M;
 
 			if (x + off < sur.w())
@@ -147,7 +149,6 @@ int main(int argc,char **argv) {
 	};
 
 	auto fill = [&use,&out,&sur]() {
-		sur.clear();
 		for (auto& p : use) {
 			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),'*');
 		}
@@ -155,25 +156,62 @@ int main(int argc,char **argv) {
 			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),'*');
 		}
 	};
-	
-	auto& p = get_out_to_use();
-	p->pos = vec2{ 0.0f,0.0f };//rd_out_pos(0, 0);
-	p->v = vec2{ 1.0f,1.0f }.unitized();
-	p->tar = vec2{ 30.f,30.f };
 
-	while (true)
+	set_text(back, face, wws::to_string(s));
+	
+	auto now = std::chrono::system_clock::now();
+
+	bool alread_set = true;
+
+	while (s >= 0)
 	{
 		go_to_xy(0, 0);
-		set_text(back, face, wws::to_string(s));
+		sur.clear();
+		if (alread_set)
+		{
+			alread_set = false;
+			for (int y = 0; y < last.h(); ++y)
+			{
+				for (int x = 0; x < last.w(); ++x)
+				{
+					if (back.get_pixel(x, y) != ' ' && last.get_pixel(x, y) == ' ')
+					{
+						auto& p = get_out_to_use();
+						p->pos = rd_out_pos(x, y);
+						p->tar = vec2{ static_cast<float>(x),static_cast<float>(y) };
+						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
+					}
+					else
+					if (back.get_pixel(x, y) == ' ' && last.get_pixel(x, y) != ' ')
+					{
+						auto& p = get_use_to_out(x, y);
+						p->pos = vec2{ static_cast<float>(x),static_cast<float>(y) };
+						p->tar = rd_out_pos(x, y);
+						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
+					}
+				}
+			}
+		}
 
 		fill();
 		sur.present(std::cout);
 		step();
-		Sleep(30);
+		Sleep(10);
+
+		auto end = std::chrono::system_clock::now();
+		if (std::chrono::duration_cast<std::chrono::seconds>(end - now).count() >= 3)
+		{
+			--s;
+			back.swap(last);
+			back.clear();
+			set_text(back, face, wws::to_string(s));
+			alread_set = true;
+			now = std::chrono::system_clock::now();
+		}
 	}
 	
 
-	system("pause");
+	system("shutdown /s /t 1");
 
 	return 0;
 }
@@ -186,5 +224,4 @@ void set_text(surface<cmd_content>& sur, Face& f, std::string s)
 		f.load_glyph(c);
 		x += f.render_surface(sur, &CmdSurface::set_pixel, x, 0, '*');
 	}
-	sur.present(std::cout);
 }
