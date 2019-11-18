@@ -55,9 +55,9 @@ namespace ft2 {
 			FT_Set_Pixel_Sizes(face, w, h);
 		}
 
-		void select_charmap(FT_CharMap cm)
+		void select_charmap(FT_Encoding_ cm)
 		{
-			FT_Set_Charmap(face, cm);
+			FT_Select_Charmap(face, cm);
 		}
 		
 		void load_glyph(FT_ULong c, uint32_t load_flag = FT_LOAD_DEFAULT, FT_Render_Mode render_flag = FT_RENDER_MODE_MONO)

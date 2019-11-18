@@ -67,13 +67,22 @@ namespace wws {
 
 		virtual void swap(cmd_content& oth)
 		{
-
+			auto temp = oth.ptr;
+			oth.ptr = this->ptr;
+			this->ptr = temp;
 		}
 
 		virtual void present(PRESENT_ARGS_TYPE a)
 		{
 			a << ptr << "\n";
 		}
+
+		void clear()
+		{
+			init();
+		}
+
+		
 
 	};
 
@@ -124,6 +133,24 @@ namespace wws {
 		void present(PRESENT_ARGS_TYPE a)
 		{
 			content.present(a);
+		}
+
+		void clear()
+		{
+			content.clear();
+		}
+
+		void swap(surface<Cnt>& oth)
+		{
+			content.swap(oth.content);
+		}
+
+		int w() {
+			return width;
+		}
+
+		int h() {
+			return height;
 		}
 	};
 
