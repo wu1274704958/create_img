@@ -12,6 +12,7 @@ namespace wws {
 	public:
 		using PIXEL_TYPE = char;
 		using PRESENT_ARGS_TYPE = std::ostream&;
+		constexpr static char PIXEL_ZERO = 0;
 		cmd_content(int w, int h) {
 			this->w = w + 1;
 			this->h = h;
@@ -57,6 +58,11 @@ namespace wws {
 		virtual void set_pixel(int x, int y, PIXEL_TYPE p)
 		{
 			ptr[(y * w) + x] = p;
+		}
+
+		virtual PIXEL_TYPE get_pixel(int x, int y)
+		{
+			return ptr[(y * w) + x];
 		}
 
 		virtual void swap(cmd_content& oth)
@@ -106,6 +112,13 @@ namespace wws {
 		{
 			if(good_pos(x,y))
 				content.set_pixel(x,y,p);
+		}
+
+		PIXEL_TYPE get_pixel(int x, int y)
+		{
+			if (good_pos(x, y))
+				return content.get_pixel(x, y);
+			return Cnt::PIXEL_ZERO;
 		}
 
 		void present(PRESENT_ARGS_TYPE a)

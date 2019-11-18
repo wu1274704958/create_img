@@ -8,8 +8,6 @@
 using namespace wws;
 using namespace ft2;
 
-template <typename Cnt,typename Pit>
-int render_text(surface<Cnt>& sur, FT_GlyphSlot gs,Pit c,int bx = 0,int by = 0);
 
 int main(int argc,char **argv) {
 	const char* font_path = "C:\\Windows\\Fonts\\simhei.ttf";
@@ -45,34 +43,4 @@ int main(int argc,char **argv) {
 	system("pause");
 
 	return 0;
-}
-
-template<typename Cnt,typename Pit>
-int render_text(surface<Cnt>& sur, FT_GlyphSlot gs,Pit c,int bx,int by)
-{
-	auto bits = &gs->bitmap;
-	constexpr int CS = sizeof(char) * 8;
-
-	int a = gs->bitmap_left + bx;
-	int b = (gs->face->size->metrics.y_ppem) - bits->rows + by;
-
-	/*for (int i = 0; i < bits->rows * bits->pitch; ++i)
-	{
-		printBin(bits->buffer[i],false);
-		if ((i + 1) % bits->pitch == 0)
-			std::cout << "\n";
-	}*/
-
-	for (int y = 0; y < bits->rows; ++y)
-	{
-		for (int x = 0; x < bits->pitch * CS; ++x)
-		{
-			if ((bits->buffer[(y * bits->pitch) + (x / CS)] << (x % CS)) & 0x80)
-			{
-				sur.set_pixel(a + x, b + y, c);
-			}
-		}
-	}
-
-	return gs->advance.x / 64;
 }
