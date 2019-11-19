@@ -57,7 +57,7 @@ int main(int argc,char **argv) {
 	surface<cmd_content> back(60, 60);
 
 	int s = 90;
-
+	
 	std::vector<std::unique_ptr<point>> use;
 	std::vector<std::unique_ptr<point>> out;
 
@@ -124,7 +124,7 @@ int main(int argc,char **argv) {
 	auto step_unit = [](std::unique_ptr<point>& p) {
 		if (p->pos.x() != p->tar.x() || p->pos.y() != p->tar.y())
 		{
-			if (std::abs(p->pos.x() - p->tar.x()) < 1.0 || std::abs(p->pos.y() - p->tar.y()) < 1.0)
+			if (std::abs(p->pos.x() - p->tar.x()) < 1.0 && std::abs(p->pos.y() - p->tar.y()) < 1.0)
 			{
 				p->pos = p->tar;
 			}
