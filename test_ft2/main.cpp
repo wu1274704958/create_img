@@ -36,14 +36,18 @@ struct point {
 	vec2 pos;
 	vec2 v;
 	vec2 tar;
+	point() : pos({ -1.f,-1.f }) {
+		
+	}
 };
 
 int main(int argc,char **argv) {
 	const char* font_path = "C:\\Windows\\Fonts\\simhei.ttf";
-	
+	int sur_w = 60;
 	if (argc > 1)
 		font_path = argv[1];
-	
+	if (argc > 2)
+		sur_w = wws::parser<int>(argv[2]);
 	Library lib;
 
 	Face face = lib.load_face<Face>(font_path);
@@ -52,9 +56,9 @@ int main(int argc,char **argv) {
 	srand(time(nullptr));
 	face.set_pixel_size(60, 60);
 
-	surface<cmd_content> sur(60, 60);
-	surface<cmd_content> last(60, 60);
-	surface<cmd_content> back(60, 60);
+	surface<cmd_content> sur( sur_w, 60);
+	surface<cmd_content> last(sur_w, 60);
+	surface<cmd_content> back(sur_w, 60);
 
 	int s = 90;
 	
@@ -177,7 +181,8 @@ int main(int argc,char **argv) {
 					if (back.get_pixel(x, y) != ' ' && last.get_pixel(x, y) == ' ')
 					{
 						auto& p = get_out_to_use();
-						p->pos = rd_out_pos(x, y);
+						if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
+							p->pos = rd_out_pos(x, y);
 						p->tar = vec2{ static_cast<float>(x),static_cast<float>(y) };
 						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
 					}
