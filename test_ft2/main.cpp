@@ -12,9 +12,16 @@
 #include <chrono>
 #include <math.h>
 
+#ifdef _MSC_VER
+
 #include <Windows.h>
 #undef max
 #undef min
+
+#else
+
+#endif  
+
 
 using namespace wws;
 using namespace ft2;
@@ -22,12 +29,16 @@ using namespace cgm;
 
 void go_to_xy(int x,int y)
 {
+#ifdef _MSC_VER
 	HANDLE hout;
 	COORD coord;
 	coord.X = x;
 	coord.Y = y;
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleCursorPosition(hout, coord);
+#else
+
+#endif
 }
 
 void set_text(surface<cmd_content>& sur, Face& f, std::string s);
@@ -162,9 +173,9 @@ int main(int argc,char **argv) {
 	};
 
 	set_text(back, face, wws::to_string(s));
-	
-	auto now = std::chrono::system_clock::now();
 
+	auto now = std::chrono::system_clock::now();
+	
 	bool alread_set = true;
 
 	while (s >= 0)
@@ -215,9 +226,9 @@ int main(int argc,char **argv) {
 		}
 	}
 	
-
-	system("shutdown /s /t 1");
-
+#ifdef _MSC_VER
+	system("shutdown /s /t 300");
+#endif 
 	return 0;
 }
 
