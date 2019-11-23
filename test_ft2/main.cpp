@@ -12,9 +12,16 @@
 #include <chrono>
 #include <math.h>
 
+#ifdef _MSC_VER
+
 #include <Windows.h>
 #undef max
 #undef min
+
+#else
+
+#endif  
+
 
 using namespace wws;
 using namespace ft2;
@@ -22,12 +29,16 @@ using namespace cgm;
 
 void go_to_xy(int x,int y)
 {
+#ifdef _MSC_VER
 	HANDLE hout;
 	COORD coord;
 	coord.X = x;
 	coord.Y = y;
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleCursorPosition(hout, coord);
+#else
+
+#endif
 }
 
 void set_text(surface<cmd_content>& sur, Face& f, std::string s);
@@ -36,14 +47,18 @@ struct point {
 	vec2 pos;
 	vec2 v;
 	vec2 tar;
+	point() : pos({ -1.f,-1.f }) {
+		
+	}
 };
 
 int main(int argc,char **argv) {
 	const char* font_path = "C:\\Windows\\Fonts\\simhei.ttf";
-	
+	int sur_w = 60;
 	if (argc > 1)
 		font_path = argv[1];
-	
+	if (argc > 2)
+		sur_w = wws::parser<int>(argv[2]);
 	Library lib;
 
 	Face face = lib.load_face<Face>(font_path);
@@ -52,12 +67,12 @@ int main(int argc,char **argv) {
 	srand(time(nullptr));
 	face.set_pixel_size(60, 60);
 
-	surface<cmd_content> sur(60, 60);
-	surface<cmd_content> last(60, 60);
-	surface<cmd_content> back(60, 60);
+	surface<cmd_content> sur( sur_w, 60);
+	surface<cmd_content> last(sur_w, 60);
+	surface<cmd_content> back(sur_w, 60);
 
 	int s = 90;
-
+	
 	std::vector<std::unique_ptr<point>> use;
 	std::vector<std::unique_ptr<point>> out;
 
@@ -124,7 +139,7 @@ int main(int argc,char **argv) {
 	auto step_unit = [](std::unique_ptr<point>& p) {
 		if (p->pos.x() != p->tar.x() || p->pos.y() != p->tar.y())
 		{
-			if (std::abs(p->pos.x() - p->tar.x()) < 1.0 || std::abs(p->pos.y() - p->tar.y()) < 1.0)
+			if (std::abs(p->pos.x() - p->tar.x()) < 1.0 && std::abs(p->pos.y() - p->tar.y()) < 1.0)
 			{
 				p->pos = p->tar;
 			}
@@ -158,9 +173,9 @@ int main(int argc,char **argv) {
 	};
 
 	set_text(back, face, wws::to_string(s));
-	
-	auto now = std::chrono::system_clock::now();
 
+	auto now = std::chrono::system_clock::now();
+	
 	bool alread_set = true;
 
 	while (s >= 0)
@@ -177,7 +192,8 @@ int main(int argc,char **argv) {
 					if (back.get_pixel(x, y) != ' ' && last.get_pixel(x, y) == ' ')
 					{
 						auto& p = get_out_to_use();
-						p->pos = rd_out_pos(x, y);
+						if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
+							p->pos = rd_out_pos(x, y);
 						p->tar = vec2{ static_cast<float>(x),static_cast<float>(y) };
 						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
 					}
@@ -210,9 +226,9 @@ int main(int argc,char **argv) {
 		}
 	}
 	
-
-	system("shutdown /s /t 1");
-
+#ifdef _MSC_VER
+	system("shutdown /s /t 300");
+#endif 
 	return 0;
 }
 
