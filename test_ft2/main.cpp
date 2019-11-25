@@ -216,9 +216,10 @@ int main(int argc,char **argv) {
 		step();
 		auto end2 = std::chrono::system_clock::now();
 		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
-		if (16 - duration > 0)
+		start = std::chrono::system_clock::now();
+		if (duration < 18)
 		{
-			std::this_thread::sleep_for(std::chrono::milliseconds(16 - duration));
+			std::this_thread::sleep_for(std::chrono::milliseconds(18 - duration));
 		}
 
 		auto end = std::chrono::system_clock::now();
