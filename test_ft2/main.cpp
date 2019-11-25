@@ -54,7 +54,7 @@ struct point {
 };
 
 int main(int argc,char **argv) {
-	const char* font_path = "C:\\Windows\\Fonts\\simhei.ttf";
+	const char* font_path = "res/fonts/SIMHEI.TTF";
 	int sur_w = 60;
 	if (argc > 1)
 		font_path = argv[1];
