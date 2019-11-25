@@ -11,6 +11,7 @@
 #include <random>
 #include <chrono>
 #include <math.h>
+#include <thread>
 
 #ifdef _MSC_VER
 
@@ -37,7 +38,7 @@ void go_to_xy(int x,int y)
 	hout = GetStdHandle(STD_OUTPUT_HANDLE);
 	SetConsoleCursorPosition(hout, coord);
 #else
-
+	printf("%c[%d;%df", 0x1B, y, x);
 #endif
 }
 
@@ -175,6 +176,7 @@ int main(int argc,char **argv) {
 	set_text(back, face, wws::to_string(s));
 
 	auto now = std::chrono::system_clock::now();
+	auto start = std::chrono::system_clock::now();
 	
 	bool alread_set = true;
 
@@ -212,7 +214,12 @@ int main(int argc,char **argv) {
 		fill();
 		sur.present(std::cout);
 		step();
-		Sleep(10);
+		auto end2 = std::chrono::system_clock::now();
+		auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
+		if (16 - duration > 0)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(16 - duration));
+		}
 
 		auto end = std::chrono::system_clock::now();
 		if (std::chrono::duration_cast<std::chrono::seconds>(end - now).count() >= 3)
