@@ -55,7 +55,7 @@ struct point {
 
 int main(int argc,char **argv) {
 	const char* font_path = "res/fonts/SIMHEI.TTF";
-	int sur_w = 60;
+	int sur_w = 90;
 	if (argc > 1)
 		font_path = argv[1];
 	if (argc > 2)
@@ -76,11 +76,11 @@ int main(int argc,char **argv) {
 
 	int x = 0;
 	srand(time(nullptr));
-	face.set_pixel_size(60, 60);
+	face.set_pixel_size(90, 90);
 
-	surface<cmd_content> sur( sur_w, 60);
-	surface<cmd_content> last(sur_w, 60);
-	surface<cmd_content> back(sur_w, 60);
+	surface<cmd_content> sur( sur_w, 90);
+	surface<cmd_content> last(sur_w, 90);
+	surface<cmd_content> back(sur_w, 90);
 
 	int s = 90;
 	
@@ -207,7 +207,7 @@ int main(int argc,char **argv) {
 						if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
 							p->pos = rd_out_pos(x, y);
 						p->tar = vec2{ static_cast<float>(x),static_cast<float>(y) };
-						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
+						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 5) * 0.06f);
 					}
 					else
 					if (back.get_pixel(x, y) == ' ' && last.get_pixel(x, y) != ' ')
@@ -215,7 +215,7 @@ int main(int argc,char **argv) {
 						auto& p = get_use_to_out(x, y);
 						p->pos = vec2{ static_cast<float>(x),static_cast<float>(y) };
 						p->tar = rd_out_pos(x, y);
-						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 4) * 0.1f);
+						p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 5) * 0.05f);
 					}
 				}
 			}
