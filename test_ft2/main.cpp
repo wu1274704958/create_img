@@ -62,7 +62,17 @@ int main(int argc,char **argv) {
 		sur_w = wws::parser<int>(argv[2]);
 	Library lib;
 
-	Face face = lib.load_face<Face>(font_path);
+	Face face;
+	try
+	{
+		face = lib.load_face<Face>(font_path);
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << e.what() << std::endl;
+		return -1;
+	}
+	
 
 	int x = 0;
 	srand(time(nullptr));
