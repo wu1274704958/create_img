@@ -181,4 +181,19 @@ namespace ft2 {
 		}
 	};
 
+	struct CenterOffEx
+	{
+		int off_x(FT_GlyphSlot& gs)
+		{
+			return gs->bitmap_left;
+		}
+		int off_y(FT_GlyphSlot& gs)
+		{
+			int oy = gs->face->size->metrics.ascender/64 - gs->face->glyph->bitmap_top;
+			if(oy + gs->face->glyph->bitmap.rows > gs->face->size->metrics.y_ppem)
+				oy -= (oy + gs->face->glyph->bitmap.rows - gs->face->size->metrics.y_ppem);
+			return oy;
+		}
+	};
+
 }

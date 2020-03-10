@@ -36,15 +36,21 @@ struct Drive : public ASDrive<cmd_content>
 	Drive(Face& f,int s) : face(f) , s(s){}
 	bool is_end()
 	{
-		return s < 0;
+		//return s < 0;
+		return s >= 97 + 26;
 	}
 	void set_text(surface<cmd_content>& sur,char c) override
 	{
-		::set_text(sur,face,wws::to_string(s),c);
+		//::set_text(sur,face,wws::to_string(s),c);
+		std::string str;
+		str += s;
+		str += (s + 1);
+		::set_text(sur,face,str,c);
 	}
 	void step() override
 	{
-		--s;
+		//--s;
+		s += 2;
 	}
 	int s = 90;
 	Face& face;
@@ -101,7 +107,7 @@ void set_text(surface<cmd_content>& sur, Face& f, std::string s,char ft)
 	for (auto c : s)
 	{
 		f.load_glyph(c);
-		CenterOff custom;
+		CenterOffEx custom;
 		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, ft);
 	}
 }
