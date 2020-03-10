@@ -124,7 +124,33 @@ namespace ft2 {
 					std::cout << "\n";
 			}*/
 
-			for (int y = 0; y < bits->rows; ++y)
+			for (unsigned int y = 0; y < bits->rows; ++y)
+			{
+				for (int x = 0; x < bits->pitch * CS; ++x)
+				{
+					if ((bits->buffer[(y * bits->pitch) + (x / CS)] << (x % CS)) & 0x80)
+					{
+						(sur.*set_pixel)(a + x, b + y,std::forward<Oth>(oth)...);
+					}
+				}
+			}
+
+			return gs->advance.x / 64;
+		}
+
+		template<typename Sur, typename Ret,typename CustomOff ,typename ...Oth>
+		int render_surface(Sur& sur,CustomOff custom_off, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth ...oth)
+		{
+			if (!face)
+				return 0;
+			auto gs = glyph_slot();
+			auto bits = &gs->bitmap;
+			constexpr int CS = sizeof(char) * 8;
+
+			int a = custom_off.off_x(gs) + bx;
+			int b = custom_off.off_y(gs) + by;
+
+			for (unsigned int y = 0; y < bits->rows; ++y)
 			{
 				for (int x = 0; x < bits->pitch * CS; ++x)
 				{
@@ -141,6 +167,18 @@ namespace ft2 {
 
 	private:
 		FT_Face face = nullptr;
+	};
+
+	struct CenterOff
+	{
+		int off_x(FT_GlyphSlot& gs)
+		{
+			return gs->bitmap_left;
+		}
+		int off_y(FT_GlyphSlot& gs)
+		{
+			return gs->face->size->metrics.ascender/64 -  gs->face->glyph->bitmap_top;
+		}
 	};
 
 }
