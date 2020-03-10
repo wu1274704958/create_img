@@ -36,12 +36,19 @@ struct Drive : public ASDrive<cmd_content>
 	Drive(Face& f,std::wstring s) : face(f) , str(std::move(s)){}
 	bool is_end()
 	{
-		return p >= str.size();
+		return p > str.size();
 	}
 	void set_text(surface<cmd_content>& sur,char f_c) override
 	{
-		face.load_glyph(str[p]);
-		face.render_surface(sur, &CmdSurface::set_pixel, 0, 0, f_c);
+		if(p == str.size())
+		{
+			face.set_pixel_size(60,60);
+			::set_text(sur,face,"@_@");
+		}else{
+			face.load_glyph(str[p]);
+			CenterOff custom;
+			face.render_surface(sur,custom, &CmdSurface::set_pixel, 0, 0, f_c);
+		}
 	}
 	void step() override
 	{
@@ -82,9 +89,15 @@ int main(int argc,char **argv) {
 	face.set_pixel_size(90, 90);
 	face.select_charmap(FT_ENCODING_UNICODE);
 
-	auto drive = std::make_shared<Drive>(face,L"一二三四");
+	auto drive = std::make_shared<Drive>(face,L"这是一个测试！");
 
 	AniSurface as(90,90,drive.get(),'*',100);
+
+	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+	{
+		auto len = (tar - pos).len() * 0.1f;
+		pos = pos + ( v * len);
+	};
 
 	as.go();
 	
@@ -100,6 +113,7 @@ void set_text(surface<cmd_content>& sur, Face& f, std::string s)
 	for (auto c : s)
 	{
 		f.load_glyph(c);
-		x += f.render_surface(sur, &CmdSurface::set_pixel, x, 0, '*');
+		CenterOff custom;
+		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, '*');
 	}
 }

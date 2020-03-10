@@ -4,6 +4,7 @@
 #include <vector>
 #include <matrix2.hpp>
 #include <comm.hpp>
+#include <functional>
 
 namespace wws{
 
@@ -105,7 +106,7 @@ namespace wws{
 		    	}
 		    	else
 		    	{
-		    		p->pos = p->pos + p->v;
+		    		move_to(p->pos,p->v,p->tar);
 		    	}
 		    }
 		    else {
@@ -113,6 +114,14 @@ namespace wws{
 		    	p->v.y() = 0.0f;
 		    }
 	    }
+
+		virtual void move_to(cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+		{
+			if(move_to_func)
+				move_to_func(pos,v,tar);
+			else
+				pos = pos + v;
+		}
 
 	void step() {
 		for (auto& p : use) {
@@ -254,6 +263,7 @@ namespace wws{
     }
 
     typename Cnt::PIXEL_TYPE fill_byte;
+	std::function<void(cgm::vec2&,cgm::vec2,cgm::vec2)> move_to_func;
 
     protected:
         int out_MaxW = 16;
