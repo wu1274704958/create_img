@@ -82,7 +82,11 @@ int main(int argc,char **argv) {
 	auto drive = std::make_shared<Drive>(face,90);
 
 	AniSurface<cmd_content> as(90,90,drive.get(),'*',100);
-
+	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+	{
+		auto len = (tar - pos).len() * 0.1f;
+		pos = pos + ( v * len);
+	};
 	as.go();
 	
 #ifdef _MSC_VER
