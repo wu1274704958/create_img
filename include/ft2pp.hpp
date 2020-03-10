@@ -100,7 +100,7 @@ namespace ft2 {
 		}
 
 		template<typename Sur, typename Ret,typename ...Oth>
-		int render_surface(Sur& sur, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth&&...oth)
+		int render_surface(Sur& sur, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth ...oth)
 		{
 			if (!face)
 				return 0;

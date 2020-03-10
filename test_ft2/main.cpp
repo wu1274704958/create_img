@@ -29,7 +29,7 @@ using namespace wws;
 using namespace ft2;
 
 
-void set_text(surface<cmd_content>& sur, Face& f, std::string s);
+void set_text(surface<cmd_content>& sur, Face& f, std::string s,char );
 
 struct Drive : public ASDrive<cmd_content>
 {
@@ -40,7 +40,7 @@ struct Drive : public ASDrive<cmd_content>
 	}
 	void set_text(surface<cmd_content>& sur,char c) override
 	{
-		::set_text(sur,face,wws::to_string(s));
+		::set_text(sur,face,wws::to_string(s),c);
 	}
 	void step() override
 	{
@@ -91,12 +91,12 @@ int main(int argc,char **argv) {
 	return 0;
 }
 
-void set_text(surface<cmd_content>& sur, Face& f, std::string s)
+void set_text(surface<cmd_content>& sur, Face& f, std::string s,char ft)
 {
 	int x = 0;
 	for (auto c : s)
 	{
 		f.load_glyph(c);
-		x += f.render_surface(sur, &CmdSurface::set_pixel, x, 0, '*');
+		x += f.render_surface(sur, &CmdSurface::set_pixel, x, 0, ft);
 	}
 }
