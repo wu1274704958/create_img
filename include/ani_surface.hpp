@@ -18,21 +18,24 @@ namespace wws{
 	    }
     };
 
+	template<typename Cnt>
     struct ASDrive
     {
         virtual bool is_end() = 0;
-        virtual void set_text(surface<cmd_content>& sur) = 0;
+        virtual void set_text(surface<Cnt>& sur,typename Cnt::PIXEL_TYPE pt) = 0;
         virtual void step() = 0;
         virtual ~ASDrive(){}
     };
 
+	template<typename Cnt>
     struct AniSurface
     {
-        AniSurface(int w,int h,ASDrive* drive, int reserve = 100) : 
+        AniSurface(int w,int h,ASDrive<Cnt>* drive,typename Cnt::PIXEL_TYPE pt,int reserve = 100) : 
             sur( w, h),
             last(w, h),
             back(w, h),
-            drive(drive)
+            drive(drive),
+			fill_byte(pt)
         {
             use.reserve(reserve);
 	        out.reserve(reserve);
@@ -187,7 +190,7 @@ namespace wws{
 
     void go()
     {
-        drive->set_text(back);
+        drive->set_text(back,fill_byte);
 
 	    now = std::chrono::system_clock::now();
 	    start = std::chrono::system_clock::now();
@@ -242,14 +245,14 @@ namespace wws{
 	    		drive->step();
 	    		back.swap(last);
 	    		back.clear();
-	    		drive->set_text(back);
+	    		drive->set_text(back,fill_byte);
 	    		alread_set = true;
 	    		now = std::chrono::system_clock::now();
 	    	}
 	    }
     }
 
-    char fill_byte = '*';
+    typename Cnt::PIXEL_TYPE fill_byte;
 
     protected:
         int out_MaxW = 16;
@@ -258,9 +261,9 @@ namespace wws{
         std::vector<std::unique_ptr<point>> use;
 	    std::vector<std::unique_ptr<point>> out;
 
-        surface<cmd_content> sur;
-	    surface<cmd_content> last;
-	    surface<cmd_content> back;
+        surface<Cnt> sur;
+	    surface<Cnt> last;
+	    surface<Cnt> back;
 
         std::chrono::system_clock::time_point now;
 	    std::chrono::system_clock::time_point start;
@@ -270,7 +273,7 @@ namespace wws{
 	
 	    bool alread_set;
 
-        ASDrive* drive = nullptr;
+        ASDrive<Cnt>* drive = nullptr;
     };
 
 }

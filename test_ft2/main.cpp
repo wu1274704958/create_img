@@ -31,18 +31,18 @@ using namespace ft2;
 
 void set_text(surface<cmd_content>& sur, Face& f, std::string s);
 
-struct Drive : public ASDrive
+struct Drive : public ASDrive<cmd_content>
 {
 	Drive(Face& f,int s) : face(f) , s(s){}
 	bool is_end()
 	{
 		return s < 0;
 	}
-	void set_text(surface<cmd_content>& sur)
+	void set_text(surface<cmd_content>& sur,char c) override
 	{
 		::set_text(sur,face,wws::to_string(s));
 	}
-	void step()
+	void step() override
 	{
 		--s;
 	}
@@ -81,7 +81,7 @@ int main(int argc,char **argv) {
 
 	auto drive = std::make_shared<Drive>(face,90);
 
-	AniSurface as(90,90,drive.get(),100);
+	AniSurface<cmd_content> as(90,90,drive.get(),'*',100);
 
 	as.go();
 	
