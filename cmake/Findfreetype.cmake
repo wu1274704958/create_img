@@ -31,8 +31,25 @@ if(WIN32)
 
 else()
 
-    message("Not Windows!")
+    	message("Not Windows!")
+    	find_path( FREE_TYPE_INCLUDE_DIR NAMES freetype ft2build.h PATHS "/data/data/com.termux/files/usr/include/freetype2" )
 
-endif()
+	find_library( FREE_TYPE_LIBRARY libfreetype.so "/data/data/com.termux/files/usr/lib")
+
+	message(${FREE_TYPE_INCLUDE_DIR})
+	message(${FREE_TYPE_LIBRARY})
+
+        if( FREE_TYPE_INCLUDE_DIR AND FREE_TYPE_LIBRARY)
+
+            	set( FREE_TYPE_FOUND TRUE )
+
+        else()
+
+        	set( FREE_TYPE_FOUND FALSE )
+
+	endif()
+
+
+endif(WIN32)
 
 message("................................................................")

@@ -38,9 +38,14 @@ endif()
 
 if(FREE_TYPE_FOUND AND MINI_TEST_FOUND)
 
-	add_executable(test_ft2 test_ft2/main.cpp)
+	add_executable(test_ft2 test_ft2/main.cpp src/comm.cpp)
 
 	target_include_directories("test_ft2" PRIVATE  ${MINI_TEST_INCLUDE_DIR}  ${FREE_TYPE_INCLUDE_DIR})
 	target_link_libraries("test_ft2" ${FREE_TYPE_LIBRARY})
+
+	add_executable(ft3 ft3/main.cpp src/comm.cpp)
+
+	target_include_directories("ft3" PRIVATE  ${MINI_TEST_INCLUDE_DIR}  ${FREE_TYPE_INCLUDE_DIR})
+	target_link_libraries("ft3" ${FREE_TYPE_LIBRARY})
 
 endif()

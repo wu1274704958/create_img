@@ -40,31 +40,58 @@ namespace ft2 {
 
 	class Face {
 	public:
+		Face() {
+
+		}
 		Face(FT_Library lib,const char*path,int idx) {
-			FT_New_Face(lib, path, idx, &face);
+			int error;
+			if ((error = FT_New_Face(lib, path, idx, &face)) == FT_Err_Unknown_File_Format)
+			{
+				throw std::runtime_error("Unknown File Format");
+			}
+			else if (error == FT_Err_Cannot_Open_Resource)
+			{
+				throw std::runtime_error("Cannot Open Resource");
+			}
 		}
 		Face(const Face&) = delete;
-		Face(Face&&) = delete;
+		Face(Face&& oth) {
+			face = oth.face;
+			oth.face = nullptr;
+		};
 		Face& operator=(const Face&) = delete;
-		Face& operator=(Face&&) = delete;
+		Face& operator=(Face&& oth)
+		{
+			if (face)
+				FT_Done_Face(face);
+			face = oth.face;
+			oth.face = nullptr;
+			return *this;
+		}
 		~Face() {
-			FT_Done_Face(face);
+			if(face)
+				FT_Done_Face(face);
 		}
 
 		void set_pixel_size(uint32_t w,uint32_t h) {
-			FT_Set_Pixel_Sizes(face, w, h);
+			if(face)
+				FT_Set_Pixel_Sizes(face, w, h);
 		}
 
 		void select_charmap(FT_Encoding_ cm)
 		{
-			FT_Select_Charmap(face, cm);
+			if (face)
+				FT_Select_Charmap(face, cm);
 		}
 		
 		void load_glyph(FT_ULong c, uint32_t load_flag = FT_LOAD_DEFAULT, FT_Render_Mode render_flag = FT_RENDER_MODE_MONO)
 		{
-			uint32_t n1 = FT_Get_Char_Index(face, c);
-			FT_Load_Glyph(face, n1, load_flag);
-			FT_Render_Glyph(face->glyph, render_flag);
+			if (face)
+			{
+				uint32_t n1 = FT_Get_Char_Index(face, c);
+				FT_Load_Glyph(face, n1, load_flag);
+				FT_Render_Glyph(face->glyph, render_flag);
+			}
 		}
 
 		FT_GlyphSlot glyph_slot()
@@ -73,8 +100,10 @@ namespace ft2 {
 		}
 
 		template<typename Sur, typename Ret,typename ...Oth>
-		int render_surface(Sur& sur, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth&&...oth)
+		int render_surface(Sur& sur, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth ...oth)
 		{
+			if (!face)
+				return 0;
 			auto gs = glyph_slot();
 			auto bits = &gs->bitmap;
 			constexpr int CS = sizeof(char) * 8;
@@ -95,7 +124,33 @@ namespace ft2 {
 					std::cout << "\n";
 			}*/
 
-			for (int y = 0; y < bits->rows; ++y)
+			for (unsigned int y = 0; y < bits->rows; ++y)
+			{
+				for (int x = 0; x < bits->pitch * CS; ++x)
+				{
+					if ((bits->buffer[(y * bits->pitch) + (x / CS)] << (x % CS)) & 0x80)
+					{
+						(sur.*set_pixel)(a + x, b + y,std::forward<Oth>(oth)...);
+					}
+				}
+			}
+
+			return gs->advance.x / 64;
+		}
+
+		template<typename Sur, typename Ret,typename CustomOff ,typename ...Oth>
+		int render_surface(Sur& sur,CustomOff custom_off, Ret(Sur::* set_pixel)(int,int,Oth...) ,int bx,int by,Oth ...oth)
+		{
+			if (!face)
+				return 0;
+			auto gs = glyph_slot();
+			auto bits = &gs->bitmap;
+			constexpr int CS = sizeof(char) * 8;
+
+			int a = custom_off.off_x(gs) + bx;
+			int b = custom_off.off_y(gs) + by;
+
+			for (unsigned int y = 0; y < bits->rows; ++y)
 			{
 				for (int x = 0; x < bits->pitch * CS; ++x)
 				{
@@ -111,7 +166,34 @@ namespace ft2 {
 		
 
 	private:
-		FT_Face face;
+		FT_Face face = nullptr;
+	};
+
+	struct CenterOff
+	{
+		int off_x(FT_GlyphSlot& gs)
+		{
+			return gs->bitmap_left;
+		}
+		int off_y(FT_GlyphSlot& gs)
+		{
+			return gs->face->size->metrics.ascender/64 -  gs->face->glyph->bitmap_top;
+		}
+	};
+
+	struct CenterOffEx
+	{
+		int off_x(FT_GlyphSlot& gs)
+		{
+			return gs->bitmap_left;
+		}
+		int off_y(FT_GlyphSlot& gs)
+		{
+			int oy = gs->face->size->metrics.ascender/64 - gs->face->glyph->bitmap_top;
+			if(oy + gs->face->glyph->bitmap.rows > gs->face->size->metrics.y_ppem)
+				oy -= (oy + gs->face->glyph->bitmap.rows - gs->face->size->metrics.y_ppem);
+			return oy;
+		}
 	};
 
 }
