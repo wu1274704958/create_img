@@ -97,6 +97,7 @@ void set_text(surface<cmd_content>& sur, Face& f, std::string s,char ft)
 	for (auto c : s)
 	{
 		f.load_glyph(c);
-		x += f.render_surface(sur, &CmdSurface::set_pixel, x, 0, ft);
+		CenterOff custom;
+		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, ft);
 	}
 }

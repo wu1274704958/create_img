@@ -245,7 +245,8 @@ namespace wws{
 	    		drive->step();
 	    		back.swap(last);
 	    		back.clear();
-	    		drive->set_text(back,fill_byte);
+				if(!drive->is_end())
+	    			drive->set_text(back,fill_byte);
 	    		alread_set = true;
 	    		now = std::chrono::system_clock::now();
 	    	}
