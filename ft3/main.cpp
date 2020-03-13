@@ -29,7 +29,7 @@ using namespace wws;
 using namespace ft2;
 
 
-void set_text(surface<cmd_content>& sur, Face& f, std::string s);
+void set_text(surface<cmd_content>& sur, Face& f, std::string s,char pt);
 
 struct Drive : public ASDrive<cmd_content>
 {
@@ -43,16 +43,20 @@ struct Drive : public ASDrive<cmd_content>
 		if(p == str.size())
 		{
 			face.set_pixel_size(60,60);
-			::set_text(sur,face,"@_@");
+			::set_text(sur,face,"@_@",f_c);
 		}else{
 			face.load_glyph(str[p]);
-			CenterOff custom;
+			CenterOffEx custom;
 			face.render_surface(sur,custom, &CmdSurface::set_pixel, 0, 0, f_c);
 		}
 	}
 	void step() override
 	{
 		++p;
+	}
+	std::ostream& get_present() override
+	{
+		return std::cout;
 	}
 	int p = 0;
 	std::wstring str;
@@ -89,9 +93,9 @@ int main(int argc,char **argv) {
 	face.set_pixel_size(90, 90);
 	face.select_charmap(FT_ENCODING_UNICODE);
 
-	auto drive = std::make_shared<Drive>(face,L"这是一个测试！");
+	auto drive = std::make_shared<Drive>(face,L"奥斯卡大奖离开撒娇的凉快撒角度来看");
 
-	AniSurface as(90,90,drive.get(),'*',100);
+	AniSurface as(90,90,drive.get(),'#',100);
 
 	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
 	{
@@ -107,13 +111,13 @@ int main(int argc,char **argv) {
 	return 0;
 }
 
-void set_text(surface<cmd_content>& sur, Face& f, std::string s)
+void set_text(surface<cmd_content>& sur, Face& f, std::string s,char pt)
 {
 	int x = 0;
 	for (auto c : s)
 	{
 		f.load_glyph(c);
 		CenterOff custom;
-		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, '*');
+		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, pt);
 	}
 }
