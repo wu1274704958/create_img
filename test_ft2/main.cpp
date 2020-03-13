@@ -52,6 +52,10 @@ struct Drive : public ASDrive<cmd_content>
 		//--s;
 		s += 2;
 	}
+	std::ostream& get_present() override
+	{
+		return std::cout;
+	}
 	int s = 90;
 	Face& face;
 };
@@ -87,7 +91,7 @@ int main(int argc,char **argv) {
 
 	auto drive = std::make_shared<Drive>(face,90);
 
-	AniSurface<cmd_content> as(90,90,drive.get(),'*',100);
+	AniSurface<cmd_content> as(90,90,drive.get(),'#',100);
 	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
 	{
 		auto len = (tar - pos).len() * 0.1f;

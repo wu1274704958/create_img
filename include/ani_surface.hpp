@@ -25,6 +25,7 @@ namespace wws{
         virtual bool is_end() = 0;
         virtual void set_text(surface<Cnt>& sur,typename Cnt::PIXEL_TYPE pt) = 0;
         virtual void step() = 0;
+		virtual typename Cnt::PRESENT_ARGS_TYPE get_present() = 0;
         virtual ~ASDrive(){}
     };
 
@@ -238,7 +239,7 @@ namespace wws{
 	    	}
 
 	    	fill();
-	    	sur.present(std::cout);
+	    	sur.present(drive->get_present());
 	    	step();
 	    	auto end2 = std::chrono::system_clock::now();
 	    	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
