@@ -25,6 +25,7 @@ namespace wws{
         virtual bool is_end() = 0;
         virtual void set_text(surface<Cnt>& sur,typename Cnt::PIXEL_TYPE pt) = 0;
         virtual void step() = 0;
+		virtual bool need_transfar(uint32_t ms,bool to_use_stable,bool to_out_stable) = 0;
 		virtual typename Cnt::PRESENT_ARGS_TYPE get_present() = 0;
         virtual ~ASDrive(){}
     };
@@ -97,7 +98,7 @@ namespace wws{
 	        }
 	    }
 
-	    void step_unit(std::unique_ptr<point>& p) 
+	    bool step_unit(std::unique_ptr<point>& p) 
         {
 		    if (p->pos.x() != p->tar.x() || p->pos.y() != p->tar.y())
 		    {
@@ -109,10 +110,12 @@ namespace wws{
 		    	{
 		    		move_to(p->pos,p->v,p->tar);
 		    	}
+				return false;
 		    }
 		    else {
 		    	p->v.x() = 0.0f;
 		    	p->v.y() = 0.0f;
+				return true;
 		    }
 	    }
 
@@ -124,13 +127,17 @@ namespace wws{
 				pos = pos + v;
 		}
 
-	void step() {
+	std::tuple<bool,bool> step() {
+		bool use_all_stable = true,out_all_stable = true;
 		for (auto& p : use) {
-			step_unit(p);
+			bool v = step_unit(p);
+			if(use_all_stable) use_all_stable = v;
 		}
 		for (auto& p : out) {
-			step_unit(p);
+			bool v = step_unit(p);
+			if(out_all_stable) out_all_stable = v;
 		}
+		return std::make_tuple(use_all_stable,out_all_stable);
 	};
 
 	void fill() {
@@ -170,20 +177,6 @@ namespace wws{
             out_M = v;   
     }
 
-    bool good_transfer_sec(int v)
-    {
-        return v > 0;
-    }  
-    int get_transfer_sec()
-    {
-        return transfer_sec;
-    }    
-    void set_transfer_sec(int v)
-    {
-        if(good_transfer_sec(v))
-            transfer_sec = v;   
-    }
-
     bool good_min_frame_ms(int v)
     {
         return v > 0;
@@ -214,6 +207,12 @@ namespace wws{
 	    	if (alread_set)
 	    	{
 	    		alread_set = false;
+				int ob = static_cast<int>(to_out_speed_min);
+				int oe = static_cast<int>(to_out_speed_max) - ob;
+
+				int ub = static_cast<int>(to_use_speed_min);
+				int ue = static_cast<int>(to_use_speed_max) - ub;
+
 	    		for (int y = 0; y < last.h(); ++y)
 	    		{
 	    			for (int x = 0; x < last.w(); ++x)
@@ -224,7 +223,7 @@ namespace wws{
 	    					if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
 	    						p->pos = rd_out_pos(x, y);
 	    					p->tar = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
-	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 5) * 0.06f);
+	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % ue) + ub) * to_use_speed);
 	    				}
 	    				else
 	    				if (back.get_pixel(x, y) == ' ' && last.get_pixel(x, y) != ' ')
@@ -232,7 +231,7 @@ namespace wws{
 	    					auto& p = get_use_to_out(x, y);
 	    					p->pos = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
 	    					p->tar = rd_out_pos(x, y);
-	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % 10) + 5) * 0.05f);
+	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % oe) + ob) * to_out_speed);
 	    				}
 	    			}
 	    		}
@@ -240,7 +239,7 @@ namespace wws{
 
 	    	fill();
 	    	sur.present(drive->get_present());
-	    	step();
+	    	auto [to_use_stable,to_out_stable] = step();
 	    	auto end2 = std::chrono::system_clock::now();
 	    	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
 	    	start = std::chrono::system_clock::now();
@@ -250,7 +249,10 @@ namespace wws{
 	    	}
 
 	    	auto end = std::chrono::system_clock::now();
-	    	if (std::chrono::duration_cast<std::chrono::seconds>(end - now).count() >= transfer_sec)
+	    	if (drive->need_transfar(
+				static_cast<uint32_t>( std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count()),
+				to_use_stable,
+				to_out_stable))
 	    	{
 	    		drive->step();
 	    		back.swap(last);
@@ -266,6 +268,14 @@ namespace wws{
     typename Cnt::PIXEL_TYPE fill_byte;
 	std::function<void(cgm::vec2&,cgm::vec2,cgm::vec2)> move_to_func;
 
+	float to_use_speed_min = 5.0f;
+	float to_use_speed_max = 15.0f;
+	float to_use_speed = 0.05f;
+
+	float to_out_speed_min = 5.0f;
+	float to_out_speed_max = 15.0f;
+	float to_out_speed = 0.05f;
+
     protected:
         int out_MaxW = 16;
         int out_M = 10;
@@ -280,7 +290,6 @@ namespace wws{
         std::chrono::system_clock::time_point now;
 	    std::chrono::system_clock::time_point start;
 
-        int transfer_sec = 3;
         int min_frame_ms = 18;
 	
 	    bool alread_set;

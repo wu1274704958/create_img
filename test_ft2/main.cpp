@@ -56,6 +56,10 @@ struct Drive : public ASDrive<cmd_content>
 	{
 		return std::cout;
 	}
+
+	bool need_transfar(uint32_t ms,bool to_use_stable,bool to_out_stable) override {
+		return ms >= 3000;
+	}
 	int s = 90;
 	Face& face;
 };

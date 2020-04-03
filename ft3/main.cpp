@@ -58,6 +58,10 @@ struct Drive : public ASDrive<cmd_content>
 	{
 		return std::cout;
 	}
+	bool need_transfar(uint32_t ms,bool to_use_stable,bool to_out_stable) override 
+	{
+		return to_use_stable && ms >= 1000;
+	}
 	int p = 0;
 	std::wstring str;
 	Face& face;
@@ -93,9 +97,11 @@ int main(int argc,char **argv) {
 	face.set_pixel_size(90, 90);
 	face.select_charmap(FT_ENCODING_UNICODE);
 
-	auto drive = std::make_shared<Drive>(face,L"°ÂË¹¿¨´ó½±Àë¿ªÈö½¿µÄÁ¹¿ìÈö½Ç¶ÈÀ´¿´");
+	auto drive = std::make_shared<Drive>(face,L"ï¿½ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ë¿ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½");
 
 	AniSurface as(90,90,drive.get(),'#',100);
+	as.to_out_speed = 0.05f;
+	as.to_use_speed = 0.1f;
 
 	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
 	{
