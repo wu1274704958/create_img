@@ -48,4 +48,9 @@ if(FREE_TYPE_FOUND AND MINI_TEST_FOUND)
 	target_include_directories("ft3" PRIVATE  ${MINI_TEST_INCLUDE_DIR}  ${FREE_TYPE_INCLUDE_DIR})
 	target_link_libraries("ft3" ${FREE_TYPE_LIBRARY})
 
+	add_executable(clock clock/main.cpp src/comm.cpp)
+
+	target_include_directories("clock" PRIVATE  ${MINI_TEST_INCLUDE_DIR}  ${FREE_TYPE_INCLUDE_DIR})
+	target_link_libraries("clock" ${FREE_TYPE_LIBRARY})
+
 endif()
