@@ -97,7 +97,7 @@ int main(int argc,char **argv) {
 	face.set_pixel_size(90, 90);
 	face.select_charmap(FT_ENCODING_UNICODE);
 
-	auto drive = std::make_shared<Drive>(face,L"ï¿½ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ë¿ªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ç¶ï¿½ï¿½ï¿½ï¿½ï¿½");
+	auto drive = std::make_shared<Drive>(face,L"²âÊÔ²âÊÔÍÛ¹þ¹þ");
 
 	AniSurface as(90,90,drive.get(),'#',100);
 	as.to_out_speed = 0.05f;
