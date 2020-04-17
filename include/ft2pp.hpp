@@ -4,6 +4,7 @@
 #include <freetype/ftglyph.h>
 
 #include <iostream>
+#include <functional>
 
 namespace ft2 {
 	class Library {
@@ -157,6 +158,33 @@ namespace ft2 {
 					if ((bits->buffer[(y * bits->pitch) + (x / CS)] << (x % CS)) & 0x80)
 					{
 						(sur.*set_pixel)(a + x, b + y,std::forward<Oth>(oth)...);
+					}
+				}
+			}
+
+			return gs->advance.x / 64;
+		}
+
+		template<typename Sur, typename Ret,typename CustomOff,typename PT>
+		int render_surface(Sur& sur,CustomOff custom_off, Ret(Sur::* set_pixel)(int,int,PT) ,int bx,int by,
+			std::function<PT(int,int)> custom_pixel)
+		{
+			if (!face)
+				return 0;
+			auto gs = glyph_slot();
+			auto bits = &gs->bitmap;
+			constexpr int CS = sizeof(char) * 8;
+
+			int a = custom_off.off_x(gs) + bx;
+			int b = custom_off.off_y(gs) + by;
+
+			for (unsigned int y = 0; y < bits->rows; ++y)
+			{
+				for (int x = 0; x < bits->pitch * CS; ++x)
+				{
+					if ((bits->buffer[(y * bits->pitch) + (x / CS)] << (x % CS)) & 0x80)
+					{
+						(sur.*set_pixel)(a + x, b + y,custom_pixel(a + x,b + y));
 					}
 				}
 			}

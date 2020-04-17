@@ -126,6 +126,22 @@ int main(int argc,char **argv) {
 	as.to_out_speed = 0.09f;
 	as.to_use_speed = 0.1f;
 
+	const char* ps = "520";
+	int st = 0;
+	int last_x = -1;
+
+	as.custom_pixel = [&last_x,&st,ps](int x,int y)->char
+	{
+		
+		if(st == 2 || (last_x != -1 && last_x != x - 1))
+			st = 0;
+		else 
+			++st;
+		last_x = x;
+
+		return ps[st];
+	};
+
 	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
 	{
 		auto len = (tar - pos).len() * 0.1f;

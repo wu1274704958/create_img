@@ -12,7 +12,8 @@ namespace wws {
 	public:
 		using PIXEL_TYPE = char;
 		using PRESENT_ARGS_TYPE = std::ostream&;
-		constexpr static char PIXEL_ZERO = 0;
+		constexpr static PIXEL_TYPE PIXEL_ZERO = 0;
+		constexpr static PIXEL_TYPE EMPTY_PIXEL = ' ';
 		cmd_content(int w, int h) {
 			this->w = w + 1;
 			this->h = h;
@@ -96,6 +97,9 @@ namespace wws {
 
 		using PIXEL_TYPE = typename Cnt::PIXEL_TYPE;
 		using PRESENT_ARGS_TYPE = typename Cnt::PRESENT_ARGS_TYPE;
+
+		constexpr static PIXEL_TYPE EMPTY_PIXEL = Cnt::EMPTY_PIXEL;
+		constexpr static PIXEL_TYPE PIXEL_ZERO = Cnt::PIXEL_ZERO;
 
 	public:
 		surface(int w, int h) : 

@@ -142,10 +142,20 @@ namespace wws{
 
 	void fill() {
 		for (auto& p : use) {
-			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),fill_byte);
+			if(custom_pixel)
+				sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),custom_pixel(
+					static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y()))
+				));
+			else
+				sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),fill_byte);
 		}
 		for (auto& p : out) {
-			sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),fill_byte);
+			if(custom_pixel)
+				sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),custom_pixel(
+					static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y()))
+				));
+			else
+				sur.set_pixel(static_cast<int>(std::roundf(p->pos.x())), static_cast<int>(std::roundf(p->pos.y())),fill_byte);
 		}
 	};
 
@@ -217,7 +227,7 @@ namespace wws{
 	    		{
 	    			for (int x = 0; x < last.w(); ++x)
 	    			{
-	    				if (back.get_pixel(x, y) != ' ' && last.get_pixel(x, y) == ' ')
+	    				if (back.get_pixel(x, y) != Cnt::EMPTY_PIXEL && last.get_pixel(x, y) == Cnt::EMPTY_PIXEL)
 	    				{
 	    					auto& p = get_out_to_use();
 	    					if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
@@ -226,7 +236,7 @@ namespace wws{
 	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % ue) + ub) * to_use_speed);
 	    				}
 	    				else
-	    				if (back.get_pixel(x, y) == ' ' && last.get_pixel(x, y) != ' ')
+	    				if (back.get_pixel(x, y) == Cnt::EMPTY_PIXEL && last.get_pixel(x, y) != Cnt::EMPTY_PIXEL)
 	    				{
 	    					auto& p = get_use_to_out(x, y);
 	    					p->pos = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
@@ -267,6 +277,7 @@ namespace wws{
 
     typename Cnt::PIXEL_TYPE fill_byte;
 	std::function<void(cgm::vec2&,cgm::vec2,cgm::vec2)> move_to_func;
+	std::function<typename Cnt::PIXEL_TYPE(int,int)> custom_pixel;
 
 	float to_use_speed_min = 5.0f;
 	float to_use_speed_max = 15.0f;
