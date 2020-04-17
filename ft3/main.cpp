@@ -109,6 +109,22 @@ int main(int argc,char **argv) {
 		pos = pos + ( v * len);
 	};
 
+	const char* ps = "LQ520!";
+	int st = 0;
+	int last_x = -1;
+
+	as.custom_pixel = [&last_x,&st,ps](int x,int y)->char
+	{
+		
+		if(st == 5 || (last_x != -1 && last_x != x - 1))
+			st = 0;
+		else 
+			++st;
+		last_x = x;
+
+		return ps[st];
+	};
+	as.set_min_frame_ms(32);
 	as.go();
 	
 #ifdef _MSC_VER

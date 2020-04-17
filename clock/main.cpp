@@ -117,23 +117,23 @@ int main(int argc,char **argv) {
 	
 
 	srand(time(nullptr));
-	face.set_pixel_size(32, 32);
+	face.set_pixel_size(56, 56);
 	face.select_charmap(FT_ENCODING_UNICODE);
 
 	auto drive = std::make_shared<Drive>(face);
 
-	AniSurface as(130,32,drive.get(),'#',300);
+	AniSurface as(224,56,drive.get(),'#',300);
 	as.to_out_speed = 0.09f;
 	as.to_use_speed = 0.1f;
 
-	const char* ps = "520";
+	const char* ps = "LQ520!";
 	int st = 0;
 	int last_x = -1;
 
 	as.custom_pixel = [&last_x,&st,ps](int x,int y)->char
 	{
 		
-		if(st == 2 || (last_x != -1 && last_x != x - 1))
+		if(st == 5 || (last_x != -1 && last_x != x - 1))
 			st = 0;
 		else 
 			++st;
@@ -148,6 +148,8 @@ int main(int argc,char **argv) {
 		pos = pos + ( v * len);
 	};
 
+	as.set_min_frame_ms(16);
+
 	as.go();
 	
 #ifdef _MSC_VER
@@ -156,13 +158,29 @@ int main(int argc,char **argv) {
 	return 0;
 }
 
+static int colon_width = 7;
+
 void set_text(surface<cmd_content>& sur, Face& f, std::string s,char pt)
 {
 	int x = 0;
 	for (auto c : s)
 	{
-		f.load_glyph(c);
-		CenterOff custom;
-		x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, pt);
+		if(c == ' ')
+		{
+			x += colon_width;
+		}else
+		{
+			f.load_glyph(c);
+			CenterOff custom;
+			if(c == ':')
+			{
+				colon_width = f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, pt);
+				x += colon_width;
+			}
+			else
+			{
+				x += f.render_surface(sur,custom, &CmdSurface::set_pixel, x, 0, pt);
+			}
+		}
 	}
 }
