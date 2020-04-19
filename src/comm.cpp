@@ -10,10 +10,18 @@
 
 #endif  
 
+//#define MSYS2
+#ifdef MSYS2
+#include <stdio.h>
+#endif
 
 namespace wws{
     void go_to_xy(int x,int y)
     {
+	#ifdef MSYS2
+		printf("%c[%d;%df", 0x1B, y, x);
+	#else
+
     #ifdef _MSC_VER
     	HANDLE hout;
     	COORD coord;
@@ -24,5 +32,7 @@ namespace wws{
     #else
     	printf("%c[%d;%df", 0x1B, y, x);
     #endif
+
+	#endif
     }
 }

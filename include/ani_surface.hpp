@@ -212,7 +212,10 @@ namespace wws{
 
 	    while (!drive->is_end())
 	    {
-	    	go_to_xy(0, 0);
+			if constexpr(std::is_same_v<Cnt,wws::cmd_content>)
+			{
+	    		go_to_xy(0, 0);
+			}
 	    	sur.clear();
 	    	if (alread_set)
 	    	{
