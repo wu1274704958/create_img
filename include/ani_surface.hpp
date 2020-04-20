@@ -201,80 +201,90 @@ namespace wws{
             min_frame_ms = v;   
     }
 
-    void go()
-    {
-        drive->set_text(back,fill_byte);
+	void ani_step()
+	{
+		if constexpr(std::is_same_v<Cnt,wws::cmd_content>)
+		{
+	    	go_to_xy(0, 0);
+		}
+	    sur.clear();
+	    if (alread_set)
+	    {
+	    	alread_set = false;
+			int ob = static_cast<int>(to_out_speed_min);
+			int oe = static_cast<int>(to_out_speed_max) - ob;
+
+			int ub = static_cast<int>(to_use_speed_min);
+			int ue = static_cast<int>(to_use_speed_max) - ub;
+
+	    	for (int y = 0; y < last.h(); ++y)
+	    	{
+	    		for (int x = 0; x < last.w(); ++x)
+	    		{
+	    			if (back.get_pixel(x, y) != Cnt::EMPTY_PIXEL && last.get_pixel(x, y) == Cnt::EMPTY_PIXEL)
+	    			{
+	    				auto& p = get_out_to_use();
+	    				if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
+	    					p->pos = rd_out_pos(x, y);
+	    				p->tar = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
+	    				p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % ue) + ub) * to_use_speed);
+	    			}
+	    			else
+	    			if (back.get_pixel(x, y) == Cnt::EMPTY_PIXEL && last.get_pixel(x, y) != Cnt::EMPTY_PIXEL)
+	    			{
+	    				auto& p = get_use_to_out(x, y);
+	    				p->pos = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
+	    				p->tar = rd_out_pos(x, y);
+	    				p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % oe) + ob) * to_out_speed);
+	    			}
+	    		}
+	    	}
+	    }
+
+	    fill();
+	    sur.present(drive->get_present());
+	    auto [to_use_stable,to_out_stable] = step();
+	    auto end2 = std::chrono::system_clock::now();
+	    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
+	    start = std::chrono::system_clock::now();
+	    if (duration < min_frame_ms)
+	    {
+	    	std::this_thread::sleep_for(std::chrono::milliseconds(min_frame_ms - duration));
+	    }
+
+	    auto end = std::chrono::system_clock::now();
+	    if (drive->need_transfar(
+			static_cast<uint32_t>( std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count()),
+			to_use_stable,
+			to_out_stable))
+	    {
+	    	drive->step();
+	    	back.swap(last);
+	    	back.clear();
+			if(!drive->is_end())
+	    		drive->set_text(back,fill_byte);
+	    	alread_set = true;
+	    	now = std::chrono::system_clock::now();
+	    }
+	}
+
+	void pre_go()
+	{
+		drive->set_text(back,fill_byte);
 
 	    now = std::chrono::system_clock::now();
 	    start = std::chrono::system_clock::now();
     
 	    alread_set = true;
+	}
+
+    void go()
+    {
+        pre_go();
 
 	    while (!drive->is_end())
 	    {
-			if constexpr(std::is_same_v<Cnt,wws::cmd_content>)
-			{
-	    		go_to_xy(0, 0);
-			}
-	    	sur.clear();
-	    	if (alread_set)
-	    	{
-	    		alread_set = false;
-				int ob = static_cast<int>(to_out_speed_min);
-				int oe = static_cast<int>(to_out_speed_max) - ob;
-
-				int ub = static_cast<int>(to_use_speed_min);
-				int ue = static_cast<int>(to_use_speed_max) - ub;
-
-	    		for (int y = 0; y < last.h(); ++y)
-	    		{
-	    			for (int x = 0; x < last.w(); ++x)
-	    			{
-	    				if (back.get_pixel(x, y) != Cnt::EMPTY_PIXEL && last.get_pixel(x, y) == Cnt::EMPTY_PIXEL)
-	    				{
-	    					auto& p = get_out_to_use();
-	    					if (!sur.good_pos(static_cast<int>(p->pos.x()), static_cast<int>(p->pos.y())))
-	    						p->pos = rd_out_pos(x, y);
-	    					p->tar = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
-	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % ue) + ub) * to_use_speed);
-	    				}
-	    				else
-	    				if (back.get_pixel(x, y) == Cnt::EMPTY_PIXEL && last.get_pixel(x, y) != Cnt::EMPTY_PIXEL)
-	    				{
-	    					auto& p = get_use_to_out(x, y);
-	    					p->pos = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
-	    					p->tar = rd_out_pos(x, y);
-	    					p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % oe) + ob) * to_out_speed);
-	    				}
-	    			}
-	    		}
-	    	}
-
-	    	fill();
-	    	sur.present(drive->get_present());
-	    	auto [to_use_stable,to_out_stable] = step();
-	    	auto end2 = std::chrono::system_clock::now();
-	    	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start).count();
-	    	start = std::chrono::system_clock::now();
-	    	if (duration < min_frame_ms)
-	    	{
-	    		std::this_thread::sleep_for(std::chrono::milliseconds(min_frame_ms - duration));
-	    	}
-
-	    	auto end = std::chrono::system_clock::now();
-	    	if (drive->need_transfar(
-				static_cast<uint32_t>( std::chrono::duration_cast<std::chrono::milliseconds>(end - now).count()),
-				to_use_stable,
-				to_out_stable))
-	    	{
-	    		drive->step();
-	    		back.swap(last);
-	    		back.clear();
-				if(!drive->is_end())
-	    			drive->set_text(back,fill_byte);
-	    		alread_set = true;
-	    		now = std::chrono::system_clock::now();
-	    	}
+			ani_step();
 	    }
     }
 
