@@ -281,11 +281,16 @@ namespace wws{
 	    alread_set = true;
 	}
 
+	bool is_end() const
+	{
+		return drive->is_end();
+	}
+
     void go()
     {
         pre_go();
 
-	    while (!drive->is_end())
+	    while (!is_end())
 	    {
 			ani_step();
 	    }
