@@ -3,8 +3,11 @@
 #include <memory>
 #include <vector>
 #include <matrix2.hpp>
-#include <comm.hpp>
+#include "comm.hpp"
 #include <functional>
+#include <surface.hpp>
+#include <thread>
+
 
 namespace wws{
 
@@ -205,7 +208,7 @@ namespace wws{
 	{
 		if constexpr(std::is_same_v<Cnt,wws::cmd_content>)
 		{
-	    	go_to_xy(0, 0);
+	    	wws::go_to_xy(0, 0);
 		}
 	    sur.clear();
 	    if (alread_set)
