@@ -32,6 +32,12 @@ namespace ft2 {
 			return T(lib,path,idx);
 		}
 
+		template<typename T>
+		T load_face_for_mem(const unsigned char* data,size_t size,int idx = 0)
+		{
+			return T(lib,data,size,idx);
+		}
+
 	private:
 		FT_Library lib = nullptr;
 		static int InsteNum;
@@ -47,6 +53,17 @@ namespace ft2 {
 		Face(FT_Library lib,const char*path,int idx) {
 			int error;
 			if ((error = FT_New_Face(lib, path, idx, &face)) == FT_Err_Unknown_File_Format)
+			{
+				throw std::runtime_error("Unknown File Format");
+			}
+			else if (error == FT_Err_Cannot_Open_Resource)
+			{
+				throw std::runtime_error("Cannot Open Resource");
+			}
+		}
+		Face(FT_Library lib,const unsigned char*data,size_t size,int idx) {
+			int error;
+			if ((error = FT_New_Memory_Face(lib, data,size,idx, &face)) == FT_Err_Unknown_File_Format)
 			{
 				throw std::runtime_error("Unknown File Format");
 			}
