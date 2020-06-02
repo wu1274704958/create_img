@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 		init_image(&clip);
 
 		auto cxt_buf = load_png(argv[1], PNG_FORMAT_RGBA, &cxt);
-		auto clip_buf = load_png(argv[2], PNG_FORMAT_BGRA, &clip);
+		auto clip_buf = load_png(argv[2], PNG_FORMAT_RGBA, &clip);
 
 		if (cxt_buf && clip_buf)
 		{
