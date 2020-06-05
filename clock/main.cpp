@@ -142,10 +142,10 @@ int main(int argc,char **argv) {
 		return ps[st];
 	};
 
-	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+	as.move_to_func = [](wws::point& p)
 	{
-		auto len = (tar - pos).len() * 0.1f;
-		pos = pos + ( v * len);
+		auto len = (p.tar - p.pos).len() * 0.1f;
+		p.pos = p.pos + (p.v * len);
 	};
 
 	as.set_min_frame_ms(16);

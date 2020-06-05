@@ -17,6 +17,7 @@ namespace wws{
 	    cgm::vec2 pos;
 	    cgm::vec2 v;
 	    cgm::vec2 tar;
+		float distance = 0.0f;
 	    point() : pos({ -1.f,-1.f }) {
             
 	    }
@@ -108,10 +109,11 @@ namespace wws{
 		    	if (std::abs(p->pos.x() - p->tar.x()) < 1.0 && std::abs(p->pos.y() - p->tar.y()) < 1.0)
 		    	{
 		    		p->pos = p->tar;
+					p->distance = 0.0f;
 		    	}
 		    	else
 		    	{
-		    		move_to(p->pos,p->v,p->tar);
+		    		move_to(*p);
 		    	}
 				return false;
 		    }
@@ -122,12 +124,12 @@ namespace wws{
 		    }
 	    }
 
-		virtual void move_to(cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+		virtual void move_to(point& p)
 		{
 			if(move_to_func)
-				move_to_func(pos,v,tar);
+				move_to_func(p);
 			else
-				pos = pos + v;
+				p.pos = p.pos + p.v;
 		}
 
 	std::tuple<bool,bool> step() {
@@ -231,6 +233,7 @@ namespace wws{
 	    					p->pos = rd_out_pos(x, y);
 	    				p->tar = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
 	    				p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % ue) + ub) * to_use_speed);
+						p->distance = (p->tar - p->pos).len();
 	    			}
 	    			else
 	    			if (back.get_pixel(x, y) == Cnt::EMPTY_PIXEL && last.get_pixel(x, y) != Cnt::EMPTY_PIXEL)
@@ -239,6 +242,7 @@ namespace wws{
 	    				p->pos = cgm::vec2{ static_cast<float>(x),static_cast<float>(y) };
 	    				p->tar = rd_out_pos(x, y);
 	    				p->v = (p->tar - p->pos).unitized() * (static_cast<float>((rand() % oe) + ob) * to_out_speed);
+						p->distance = (p->tar - p->pos).len();
 	    			}
 	    		}
 	    	}
@@ -297,7 +301,7 @@ namespace wws{
     }
 
     typename Cnt::PIXEL_TYPE fill_byte;
-	std::function<void(cgm::vec2&,cgm::vec2,cgm::vec2)> move_to_func;
+	std::function<void(point&)> move_to_func;
 	std::function<typename Cnt::PIXEL_TYPE(int,int)> custom_pixel;
 
 	float to_use_speed_min = 5.0f;

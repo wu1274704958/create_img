@@ -103,10 +103,10 @@ int main(int argc,char **argv) {
 	as.to_out_speed = 0.05f;
 	as.to_use_speed = 0.1f;
 
-	as.move_to_func = [](cgm::vec2& pos,cgm::vec2 v,cgm::vec2 tar)
+	as.move_to_func = [](wws::point& p)
 	{
-		auto len = (tar - pos).len() * 0.1f;
-		pos = pos + ( v * len);
+		auto len = (p.tar - p.pos).len() * 0.1f;
+		p.pos = p.pos + (p.v * len);
 	};
 
 	const char* ps = "LQ520!";
