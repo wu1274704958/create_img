@@ -61,7 +61,7 @@ namespace wws {
 			ptr[(y * w) + x] = p;
 		}
 
-		virtual PIXEL_TYPE get_pixel(int x, int y)
+		virtual PIXEL_TYPE get_pixel(int x, int y) const
 		{
 			return ptr[(y * w) + x];
 		}
@@ -73,7 +73,7 @@ namespace wws {
 			this->ptr = temp;
 		}
 
-		virtual void present(PRESENT_ARGS_TYPE a)
+		virtual void present(PRESENT_ARGS_TYPE a) const
 		{
 			a << ptr << "\n";
 		}
