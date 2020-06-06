@@ -5,6 +5,7 @@
 
 #include <iostream>
 #include <functional>
+#include <optional>
 
 namespace ft2 {
 	class Library {
@@ -209,6 +210,20 @@ namespace ft2 {
 			return gs->advance.x / 64;
 		}
 		
+		template<typename CustomOff>
+		std::optional<std::tuple<int,int,int,unsigned int, unsigned int>> get_glyph_data(CustomOff custom_off)
+		{
+			if (!face)
+				return {};
+			auto gs = glyph_slot();
+			auto bits = &gs->bitmap;
+			constexpr int CS = sizeof(char) * 8;
+
+			int a = custom_off.off_x(gs);
+			int b = custom_off.off_y(gs);
+
+			return std::make_optional(std::make_tuple(a, b, static_cast<int>(gs->advance.x / 64), bits->width, bits->rows));
+		}
 
 	private:
 		FT_Face face = nullptr;
@@ -238,6 +253,18 @@ namespace ft2 {
 			if(oy + gs->face->glyph->bitmap.rows > gs->face->size->metrics.y_ppem)
 				oy -= (oy + gs->face->glyph->bitmap.rows - gs->face->size->metrics.y_ppem);
 			return oy;
+		}
+	};
+
+	struct AlwaysZero
+	{
+		int off_x(FT_GlyphSlot& gs)
+		{
+			return 0;
+		}
+		int off_y(FT_GlyphSlot& gs)
+		{
+			return 0;
 		}
 	};
 

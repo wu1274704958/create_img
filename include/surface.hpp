@@ -116,7 +116,7 @@ namespace wws {
 		surface<Cnt>& operator=(const surface<Cnt>&) = delete;
 		surface<Cnt>& operator=(surface<Cnt>&&) = default;
 
-		bool good_pos(int x, int y)
+		bool good_pos(int x, int y) const
 		{
 			return x >= 0 && x < width && y >= 0 && y < height;
 		}
@@ -127,14 +127,14 @@ namespace wws {
 				content.set_pixel(x,y,p);
 		}
 
-		PIXEL_TYPE get_pixel(int x, int y)
+		PIXEL_TYPE get_pixel(int x, int y) const
 		{
 			if (good_pos(x, y))
 				return content.get_pixel(x, y);
 			return Cnt::PIXEL_ZERO;
 		}
 
-		void present(PRESENT_ARGS_TYPE a)
+		void present(PRESENT_ARGS_TYPE a) const
 		{
 			content.present(a);
 		}
@@ -149,13 +149,22 @@ namespace wws {
 			content.swap(oth.content);
 		}
 
-		int w() {
+		int w() const
+		{
 			return width;
 		}
 
-		int h() {
+		int h() const
+		{
 			return height;
 		}
+
+		const Cnt& get_content() const
+		{
+			return content;
+		}
+		
+
 	};
 
 	typedef surface<cmd_content> CmdSurface;
