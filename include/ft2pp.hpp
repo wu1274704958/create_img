@@ -6,6 +6,7 @@
 #include <iostream>
 #include <functional>
 #include <optional>
+#include <atomic>
 
 namespace ft2 {
 	class Library {
@@ -20,7 +21,14 @@ namespace ft2 {
 		}
 		~Library() {
 			--InsteNum;
-			FT_Done_FreeType(lib);
+			if(FaceInstanceNum <= 0)
+				FT_Done_FreeType(lib);
+			else
+			{
+				BeLeftLib = lib;
+				lib = nullptr;
+				NeedDoneLib = true;
+			}
 		}
 		Library(const Library&) = delete;
 		Library(Library&&) = delete;
@@ -39,12 +47,35 @@ namespace ft2 {
 			return T(lib,data,size,idx);
 		}
 
+		inline static int get_InsteNum()
+		{
+			return InsteNum;
+		}
+
+		inline static void create_face()
+		{
+			++FaceInstanceNum;
+		}
+
+		inline static void done_face()
+		{
+			--FaceInstanceNum;
+			if(FaceInstanceNum == 0 && NeedDoneLib && BeLeftLib)
+				FT_Done_FreeType(BeLeftLib);
+		}
+
 	private:
 		FT_Library lib = nullptr;
-		static int InsteNum;
+		static std::atomic<int> InsteNum;
+		static std::atomic<int> FaceInstanceNum;
+		static std::atomic<bool> NeedDoneLib;
+		static FT_Library BeLeftLib;
 	};
 
-	inline int Library::InsteNum = 0;
+	inline std::atomic<int> Library::InsteNum = 0;
+	inline std::atomic<int> Library::FaceInstanceNum = 0;
+	inline std::atomic<bool> Library::NeedDoneLib = false;
+	inline FT_Library Library::BeLeftLib = nullptr;
 
 	class Face {
 	public:
@@ -61,6 +92,8 @@ namespace ft2 {
 			{
 				throw std::runtime_error("Cannot Open Resource");
 			}
+			if (face)
+				Library::create_face();
 		}
 		Face(FT_Library lib,const unsigned char*data,size_t size,int idx) {
 			int error;
@@ -72,6 +105,8 @@ namespace ft2 {
 			{
 				throw std::runtime_error("Cannot Open Resource");
 			}
+			if (face)
+				Library::create_face();
 		}
 		Face(const Face&) = delete;
 		Face(Face&& oth) {
@@ -81,15 +116,14 @@ namespace ft2 {
 		Face& operator=(const Face&) = delete;
 		Face& operator=(Face&& oth)
 		{
-			if (face)
-				FT_Done_Face(face);
+			done();
+				
 			face = oth.face;
 			oth.face = nullptr;
 			return *this;
 		}
 		~Face() {
-			if(face)
-				FT_Done_Face(face);
+			done();
 		}
 
 		void set_pixel_size(uint32_t w,uint32_t h) {
@@ -224,7 +258,15 @@ namespace ft2 {
 
 			return std::make_optional(std::make_tuple(a, b, static_cast<int>(gs->advance.x / 64), bits->width, bits->rows));
 		}
-
+	protected:
+		void done()
+		{
+			if (face)
+			{
+				FT_Done_Face(face);
+				Library::done_face();
+			}
+		}
 	private:
 		FT_Face face = nullptr;
 	};
