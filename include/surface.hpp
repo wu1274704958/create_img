@@ -30,6 +30,9 @@ namespace wws {
 		{
 			ptr = oth.ptr;
 			oth.ptr = nullptr;
+
+			w = oth.w;
+			h = oth.h;
 		}
 		cmd_content& operator=(const cmd_content&) = delete;
 		cmd_content& operator=(cmd_content&& oth)
@@ -41,6 +44,8 @@ namespace wws {
 			}
 			ptr = oth.ptr;
 			oth.ptr = nullptr;
+			w = oth.w;
+			h = oth.h;
 			return *this;
 		}
 
@@ -71,6 +76,14 @@ namespace wws {
 			auto temp = oth.ptr;
 			oth.ptr = this->ptr;
 			this->ptr = temp;
+
+			auto tt = oth.w;
+			oth.w = w;
+			w = tt;
+
+			tt = oth.h;
+			oth.h = h;
+			h = tt;
 		}
 
 		virtual void present(PRESENT_ARGS_TYPE a) const
@@ -111,10 +124,10 @@ namespace wws {
 		}
 
 		surface(const surface<Cnt>&) = delete;
-		surface(surface<Cnt>&&) = default;
+		surface(surface<Cnt>&& oth) = default;
 
 		surface<Cnt>& operator=(const surface<Cnt>&) = delete;
-		surface<Cnt>& operator=(surface<Cnt>&&) = default;
+		surface<Cnt>& operator=(surface<Cnt>&& oth) = default;
 
 		bool good_pos(int x, int y) const
 		{
