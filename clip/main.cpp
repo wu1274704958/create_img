@@ -16,10 +16,12 @@ using namespace ps;
 
 void f1(std::tuple<dyn_op,ps::hex, ps::hex>&, CONST_ARGS);
 void f2(std::tuple<dyn_op, ps::hex, dyn_op, ps::hex, unsigned int, ps::hex>&, CONST_ARGS);
+void f3(std::tuple<dyn_op,int, ps::hex, ps::hex>&, CONST_ARGS);
 
 auto handlers = make_tuple(
 	FuncWithArgs<void,std::tuple<dyn_op,ps::hex, ps::hex>,CONST_ARGS>(f1),
-	FuncWithArgs<void,std::tuple<dyn_op, ps::hex, dyn_op, ps::hex, unsigned int, ps::hex>, CONST_ARGS>(f2)
+	FuncWithArgs<void,std::tuple<dyn_op, ps::hex, dyn_op, ps::hex, unsigned int, ps::hex>, CONST_ARGS>(f2),
+	FuncWithArgs<void, std::tuple<dyn_op, int,ps::hex, ps::hex>, CONST_ARGS>(f3)
 );
 
 
@@ -36,6 +38,8 @@ int main(int argc, char** argv)
 			cerr << "parser failed!" << endl;
 			return -1;
 		}
+
+		getchar();
 
 		png_image cxt, clip;
 
@@ -97,6 +101,25 @@ void f1(std::tuple<dyn_op,ps::hex,ps::hex>& args,png_imagep cxt,png_imagep clip,
 			int curr = y * cxt->width + x;
 			int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
 			if (op.cmp( *cc , color))
+			{
+				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
+				*cxt_c = dst_color;
+			}
+		}
+	}
+}
+
+void f3(std::tuple<dyn_op,int, ps::hex, ps::hex>& args, png_imagep cxt, png_imagep clip, unique_ptr<png_byte[]>& cxt_ptr, unique_ptr<png_byte[]>& clip_ptr)
+{
+	auto [op, unit_ty,color, dst_color] = args;
+	for (int y = 0; y < cxt->height; ++y)
+	{
+		for (int x = 0; x < cxt->width; ++x)
+		{
+			int curr = y * cxt->width + x;
+			int* cc = reinterpret_cast<int*>(&clip_ptr[curr * 4]);
+			int unit = ((*cc >> unit_ty) & 0xff);
+			if (op.cmp(unit, color))
 			{
 				int* cxt_c = reinterpret_cast<int*>(&cxt_ptr[curr * 4]);
 				*cxt_c = dst_color;

@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 #include <matrix2.hpp>
-#include "comm.hpp"
+#include "comm_in.hpp"
 #include <functional>
 #include <surface.hpp>
 #include <thread>
