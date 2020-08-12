@@ -18,6 +18,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 find_package(libpng)
 find_package(MINI_TEST)
 find_package(freetype)
+find_package(STB_IMG)
 
 include_directories( "${CMAKE_SOURCE_DIR}/include")
 
@@ -33,6 +34,13 @@ if(LIB_PNG_FOUND AND MINI_TEST_FOUND)
 
 	target_include_directories("clip" PRIVATE ${LIB_PNG_INCLUDE_DIR} ${MINI_TEST_INCLUDE_DIR})
 	target_link_libraries("clip" ${LIB_PNG_LIBRARY})
+
+	if(STB_IMG_FOUND)
+		add_executable(atlas atlas/main.cpp)
+
+		target_include_directories("atlas" PRIVATE ${LIB_PNG_INCLUDE_DIR} ${MINI_TEST_INCLUDE_DIR} ${STB_IMG_INCLUDE_DIR})
+		target_link_libraries("atlas" ${LIB_PNG_LIBRARY})
+	endif()
 
 endif()
 
