@@ -171,6 +171,7 @@ void copy_to(ImageData* img,wws::rgba_content& out,int bx,int by)
 				out.get_pixel(bx + x, by + y).set_r(img->data[idx * img->nrComponents + 0]);
 				out.get_pixel(bx + x, by + y).set_g(img->data[idx * img->nrComponents + 1]);
 				out.get_pixel(bx + x, by + y).set_b(img->data[idx * img->nrComponents + 2]);
+				out.get_pixel(bx + x, by + y).set_a(255);
 			}
 			else if (img->nrComponents == 4) {
 				out.get_pixel(bx + x, by + y).set_r(img->data[idx * img->nrComponents + 0]);
