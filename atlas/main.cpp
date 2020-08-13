@@ -11,7 +11,74 @@
 
 namespace fs = std::filesystem;
 
-int fill(wws::Json& config,std::vector<fs::path>& back,wws::rgba_content& out, int dist, int size, int x,int y, int w, int h);
+struct ImageData
+{
+	unsigned char* data = nullptr;
+	int width = 0, height = 0, nrComponents = 0;
+
+	ImageData()
+	{}
+
+	ImageData(unsigned char* data, int width, int height, int nrComponents) : data(data),
+		width(width),
+		height(height),
+		nrComponents(nrComponents)
+	{}
+
+	ImageData(std::string path)
+	{
+		data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+	}
+
+	ImageData(const ImageData&) = delete;
+	ImageData& operator=(const ImageData&) = delete;
+
+	ImageData(ImageData&& oth)
+	{
+		data = oth.data;
+		width = oth.width;
+		height = oth.height;
+		nrComponents = oth.nrComponents;
+
+		oth.data = nullptr;
+		oth.clear();
+	}
+	ImageData& operator=(ImageData&& oth)
+	{
+		if (data)
+			stbi_image_free(data);
+
+		data = oth.data;
+		width = oth.width;
+		height = oth.height;
+		nrComponents = oth.nrComponents;
+
+		oth.data = nullptr;
+		oth.clear();
+
+		return *this;
+	}
+	void clear()
+	{
+		width = height = nrComponents = 0;
+	}
+	bool good()
+	{
+		return data != nullptr;
+	}
+
+	~ImageData()
+	{
+		if (data)
+			stbi_image_free(data);
+		clear();
+	}
+};
+
+
+int fill(wws::Json& config,std::vector<fs::path>& back,wws::rgba_content& out,std::unordered_map<std::string, ImageData>& map, int dist, int x,int y, int w, int h);
+
+
 
 int main(int argc,char **argv)
 {
@@ -42,6 +109,7 @@ int main(int argc,char **argv)
 	
 	wws::Json config;
 	std::vector<fs::path> back;
+	std::unordered_map<std::string, ImageData> map;
 
 	wws::enum_path(root, [&back](const fs::path& f) {
 		if (f.extension() == ".png" || f.extension() == ".jpg")
@@ -53,8 +121,8 @@ int main(int argc,char **argv)
 
 	wws::rgba_content out(size, size);
 	out.init();
-	//getchar();
-	int err = fill(config,back, out,dist,size,0,0,size,size);
+	getchar();
+	int err = fill(config,back, out,map,dist,0,0,size,size);
 
 	dbg(back.size());
 
@@ -63,65 +131,91 @@ int main(int argc,char **argv)
 	return 0;
 }
 
-int fill(wws::Json& config, std::vector<fs::path>& back, wws::rgba_content& out,int dist,int size, int bx, int by, int w, int h)
+void copy_to(ImageData* img,wws::rgba_content& out,int bx,int by)
+{
+	for (int y = 0; y < img->height; ++y)
+	{
+		for (int x = 0; x < img->width; ++x)
+		{
+			int idx = y * img->width + x;
+			if (img->nrComponents == 3)
+			{
+				out.get_pixel(bx + x, by + y).set_r(img->data[idx * img->nrComponents + 0]);
+				out.get_pixel(bx + x, by + y).set_g(img->data[idx * img->nrComponents + 1]);
+				out.get_pixel(bx + x, by + y).set_b(img->data[idx * img->nrComponents + 2]);
+			}
+			else if (img->nrComponents == 4) {
+				out.get_pixel(bx + x, by + y).set_r(img->data[idx * img->nrComponents + 0]);
+				out.get_pixel(bx + x, by + y).set_g(img->data[idx * img->nrComponents + 1]);
+				out.get_pixel(bx + x, by + y).set_b(img->data[idx * img->nrComponents + 2]);
+				out.get_pixel(bx + x, by + y).set_a(img->data[idx * img->nrComponents + 3]);
+			}
+		}
+	}
+}
+
+int fill(wws::Json& config, std::vector<fs::path>& back, wws::rgba_content& out,std::unordered_map<std::string, ImageData>& map,int dist, int bx, int by, int w, int h)
 {
 	if (back.empty()) return -1;
-	
+	dbg(std::make_tuple(bx, by,w,h));
+	ImageData* img_ = nullptr;
+	int idx = -1;
+	int max_size = 0;
+
 	for (int i = 0; i < back.size(); ++i)
 	{
 		auto& f = back[i];
 
 		auto f_str = f.generic_string();
 
-		int width, height, nrComponents;
-		unsigned char* data = stbi_load(f_str.c_str(), &width, &height, &nrComponents, 0);
-
-		if (w >= width && h >= height)
+		ImageData* img;
+		if (map.find(f_str) != map.end())
 		{
-			dbg(std::make_tuple(bx, by));
-			for (int y = 0; y < height; ++y)
-			{
-				for (int x = 0; x < width; ++x)
-				{
-					int idx = y * width + x;
-					if (nrComponents == 3)
-					{
-						out.get_pixel(bx + x,by + y).set_r(data[idx * nrComponents + 0]);
-						out.get_pixel(bx + x, by + y).set_g(data[idx * nrComponents + 1]);
-						out.get_pixel(bx + x, by + y).set_b(data[idx * nrComponents + 2]);
-					}
-					else if (nrComponents == 4) {	
-						out.get_pixel(bx + x, by + y).set_r(data[idx * nrComponents + 0]);
-						out.get_pixel(bx + x, by + y).set_g(data[idx * nrComponents + 1]);
-						out.get_pixel(bx + x, by + y).set_b(data[idx * nrComponents + 2]);
-						out.get_pixel(bx + x, by + y).set_a(data[idx * nrComponents + 3]);
-
-						out.get_pixel(bx + x, by + y) = 0xffff0000;
-					}
-				}
-			}
-			stbi_image_free(data);
-			back.erase(back.begin() + i);
-
-			int nbx = bx + width + dist;
-			int nby = by + height + dist;
-			int err = 0;
-			
-			if (size - nby > 0)
-			{
-				(err = fill(config, back, out, dist, size, bx, nby, width, size - nby));
-			}
-			if (size - nbx > 0)
-			{
-				(err = fill(config, back, out, dist, size, nbx, by, size - nbx, height));
-			}
-			if (size - nby > 0 && size - nbx > 0)
-			{
-				(err = fill(config, back, out, dist, size, nbx, nby, size - nbx, size - nby));
-			}
-
-			return 0;
+			img = &(map[f_str]);
 		}
+		else {
+			map[f_str] = ImageData(f_str);
+			img = &(map[f_str]);
+		}
+
+		if (img->good() && w >= img->width && h >= img->height)
+		{
+			if (img->width * img->height > max_size)
+			{
+				img_ = img;
+				max_size = img->width * img->height;
+				idx = i;
+			}
+		}
+	}
+
+	if (img_)
+	{
+
+		copy_to(img_, out, bx, by);
+
+		back.erase(back.begin() + idx);
+
+		int nbx = bx + img_->width + dist;
+		int nby = by + img_->height + dist;
+		int err = 0;
+		int nh = by + h;
+		int nw = bx + w;
+
+		if (nh - nby > 0)
+		{
+			(err = fill(config, back, out, map, dist, bx, nby, img_->width, nh - nby));
+		}
+		if (nw - nbx > 0)
+		{
+			(err = fill(config, back, out, map, dist, nbx, by, nw - nbx, img_->height));
+		}
+		if (nh - nby > 0 && nw - nbx > 0)
+		{
+			(err = fill(config, back, out, map, dist, nbx, nby, nw - nbx, nh - nby));
+		}
+
+		return 0;
 	}
 	return -2;
 }
