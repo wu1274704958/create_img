@@ -8,6 +8,7 @@
 #include "comm_in.hpp"
 #include <dbg.hpp>
 #include <find_path.hpp>
+#include <fileop.hpp>
 
 namespace fs = std::filesystem;
 
@@ -76,7 +77,14 @@ struct ImageData
 };
 
 
-int fill(wws::Json& config,std::vector<fs::path>& back,wws::rgba_content& out,std::unordered_map<std::string, ImageData>& map, int dist, int x,int y, int w, int h);
+int fill(wws::Json& config,
+	std::vector<fs::path>& back,
+	wws::rgba_content& out,
+	std::unordered_map<std::string, ImageData>& map,
+	std::string& fname,
+	int tid,
+	int dist,
+	int x, int y, int w, int h);
 
 
 
@@ -110,6 +118,9 @@ int main(int argc,char **argv)
 	wws::Json config;
 	std::vector<fs::path> back;
 	std::unordered_map<std::string, ImageData> map;
+	int texture_idx = 1;
+
+	config.put("size", size);
 
 	wws::enum_path(root, [&back](const fs::path& f) {
 		if (f.extension() == ".png" || f.extension() == ".jpg")
@@ -119,14 +130,31 @@ int main(int argc,char **argv)
 	});
 	
 
-	wws::rgba_content out(size, size);
-	out.init();
-	getchar();
-	int err = fill(config,back, out,map,dist,0,0,size,size);
+	while (1)
+	{
+		wws::rgba_content out(size, size);
+		out.init();
 
-	dbg(back.size());
+		std::string fname(dir);
+		fname += '_';
+		fname += wws::to_string(texture_idx);
+		fname += ".png";
 
-	stbi_write_png("out.png", out.width(), out.height(), 4, out.get(), 0 );
+		int err = fill(config, back, out, map, fname,texture_idx, dist, 0, 0, size, size);
+
+		dbg(back.size());
+		stbi_write_png(fname.c_str(), out.width(), out.height(), 4, out.get(), 0);
+
+		++texture_idx;
+
+		if (back.empty())
+			break;
+	}
+
+	std::string conf_name(dir);
+	conf_name += ".txt";
+
+	wws::write_to_file(conf_name, config.to_string(),std::ios::binary);
 
 	return 0;
 }
@@ -154,7 +182,14 @@ void copy_to(ImageData* img,wws::rgba_content& out,int bx,int by)
 	}
 }
 
-int fill(wws::Json& config, std::vector<fs::path>& back, wws::rgba_content& out,std::unordered_map<std::string, ImageData>& map,int dist, int bx, int by, int w, int h)
+int fill(wws::Json& config,
+	std::vector<fs::path>& back,
+	wws::rgba_content& out,
+	std::unordered_map<std::string, ImageData>& map,
+	std::string& fname,
+	int tid,
+	int dist,
+	int bx, int by, int w, int h)
 {
 	if (back.empty()) return -1;
 	dbg(std::make_tuple(bx, by,w,h));
@@ -194,6 +229,15 @@ int fill(wws::Json& config, std::vector<fs::path>& back, wws::rgba_content& out,
 
 		copy_to(img_, out, bx, by);
 
+		wws::Json d;
+		d.put("texture", fname);
+		d.put("x", bx);
+		d.put("y", by);
+		d.put("w", img_->width);
+		d.put("h", img_->height);
+
+		config.put(back[idx].relative_path().generic_string(), std::move(d));
+
 		back.erase(back.begin() + idx);
 
 		int nbx = bx + img_->width + dist;
@@ -204,16 +248,16 @@ int fill(wws::Json& config, std::vector<fs::path>& back, wws::rgba_content& out,
 
 		if (nh - nby > 0)
 		{
-			(err = fill(config, back, out, map, dist, bx, nby, img_->width, nh - nby));
+			(err = fill(config, back, out, map, fname,tid,dist, bx, nby, w, nh - nby));
 		}
 		if (nw - nbx > 0)
 		{
-			(err = fill(config, back, out, map, dist, nbx, by, nw - nbx, img_->height));
+			(err = fill(config, back, out, map, fname, tid,dist, nbx, by, nw - nbx, img_->height));
 		}
-		if (nh - nby > 0 && nw - nbx > 0)
-		{
-			(err = fill(config, back, out, map, dist, nbx, nby, nw - nbx, nh - nby));
-		}
+		//if (nh - nby > 0 && nw - nbx > 0)
+		//{
+		//	(err = fill(config, back, out, map, dist, nbx, nby, nw - nbx, nh - nby));
+		//}
 
 		return 0;
 	}
